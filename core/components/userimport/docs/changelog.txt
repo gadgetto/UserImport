@@ -1,0 +1,6 @@
+Changelog for UserImport
+
+UserImport 1.0.0-beta1
+--------------------------------------------------
+
+- first public beta release
