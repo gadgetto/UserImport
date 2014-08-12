@@ -13,7 +13,6 @@ Reqirements:
 
 - MODx 2.3 and above
 
-Feel free to suggest ideas/improvements/bugs on our website:
+Feel free to suggest ideas/improvements/bugs on Github:
 
-http://www.bitego.com/extras/userimport/userimport-support.html
-
+https://github.com/gadgetto/UserImport/issues
