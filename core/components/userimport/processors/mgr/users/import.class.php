@@ -106,6 +106,7 @@ class UserImportProcessor extends modProcessor {
 
         // Get selected MODX user group(s)
         $usergroups = $this->getProperty('usergroups');
+        $groups = array();
         if (!empty($usergroups)) {
             // extract group IDs
             // (e.g. n_ug_5,n_ug_6,n_ug_7 )
@@ -115,8 +116,6 @@ class UserImportProcessor extends modProcessor {
             // $nodeparts[3] = parent grpID (or empty)
             
             $nodes = explode(',', $usergroups);
-            
-            $groups = array();
             
             foreach ($nodes as $node) {
                 $nodeparts = explode('_', $node);

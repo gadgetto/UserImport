@@ -241,6 +241,39 @@ class ImportHandler {
     }
 
     /**
+     * Combines predefined $userFields array with imported values.
+     *
+     * @access private
+     * @param array $fields
+     * @param array $values 
+     * @return array $combined The combined array
+     */
+    private function _combineArrays($fields, $values) {
+        
+        $fieldscount = count($fields);
+        $valuescount = count($values);
+        
+        // More fields than values
+        if ($fieldscount > $valuescount) {
+            $more = $fieldscount - $valuescount;
+            // How many fields are we missing at the end of the $values array?
+            $more = $fieldscount - $valuescount;
+            // Add empty strings to ensure arrays $fields and $values have same number of elements
+            for($i = 0; $i < $more; $i++) {
+                $values[] = '';
+            }
+        
+        // More values than fields 
+        } elseif ($valuescount > $fieldscount) {
+            // Slice extra values        
+            $values = array_slice($values, 0, $fieldscount);
+        }
+        
+        $combined = array_combine($fields, $values);
+        return $combined;
+    }
+
+    /**
      * Save a new user + profile.
      * 
      * @access private
@@ -295,7 +328,7 @@ class ImportHandler {
             return false;
         }
 
-        // dob -> needs check if provided!
+        // dob -> needs check!
         if (!empty($fieldvalues['dob']) || $fieldvalues['dob'] == '0') {
             // dob can be provided as UNIX timestamp or 
             // any valid php date format
@@ -310,7 +343,7 @@ class ImportHandler {
             }
         }
         
-        // gender -> needs check if provided!
+        // gender -> needs check!
         if (!empty($fieldvalues['gender']) && !$this->validGender($fieldvalues['gender'])) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_gender_invalid').$fieldvalues['gender']);
             return false;
@@ -411,7 +444,7 @@ class ImportHandler {
             $userId = $user->get('id'); // preserve id of new user for later use
             
             // Add user to MODX user group and assign role
-            if (is_array($groups) && !empty($groups)) {
+            if (isset($groups) && is_array($groups) && !empty($groups)) {
                 foreach ($groups as $group) {
                     // With the current joinGroup method of the MODX moduser.class.php it's not possible 
                     // to programmatically add a user to a group without assigning a role.
@@ -491,26 +524,6 @@ class ImportHandler {
             return true;
         }
         return false;
-    }
-    
-    /**
-     * Combine arrays with different field counts.
-     *
-     * @access private
-     * @param array $fields
-     * @param array $values 
-     * @return array $combined The combined array
-     */
-    private function _combineArrays($fields, $values) {
-        $acount = count($fields);
-        $bcount = count($values);
-        
-        $size = ($acount > $bcount) ? $bcount : $acount;
-        $fields = array_slice($fields, 0, $size);
-        $values = array_slice($values, 0, $size);
-        $combined = array_combine($fields, $values);
-        
-        return $combined;
     }
     
     /**
