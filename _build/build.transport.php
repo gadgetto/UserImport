@@ -107,6 +107,53 @@ if (empty($menu)) {
 flush();
 unset($vehicle, $menu);
 
+/* Create elements category */
+$category = $modx->newObject('modCategory');
+$category->set('id', 1);
+$category->set('category', PKG_NAME);
+$modx->log(modX::LOG_LEVEL_INFO, 'Created elements category.');
+flush();
+
+/* Create category vehicle for all elements */
+$attributes = array(
+    xPDOTransport::UNIQUE_KEY => 'category',
+    xPDOTransport::PRESERVE_KEYS => false,
+    xPDOTransport::UPDATE_OBJECT => true,
+    xPDOTransport::RELATED_OBJECTS => true,
+    xPDOTransport::RELATED_OBJECT_ATTRIBUTES => array(
+        'Snippets' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ),
+        'Chunks' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ),
+        'Plugins' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ),
+        'Templates' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'templatename',
+        ),
+        'TemplateVars' => array(
+            xPDOTransport::PRESERVE_KEYS => false,
+            xPDOTransport::UPDATE_OBJECT => true,
+            xPDOTransport::UNIQUE_KEY => 'name',
+        ),
+    )
+);
+// Exclude files with a specific pattern (eg. __ prefix)
+$categoryAttributes = array_merge($attributes, array('copy_exclude_patterns' => array('/^__/')));
+
+$vehicle = $builder->createVehicle($category, $categoryAttributes);
+$builder->putVehicle($vehicle);
+unset($category, $attributes, $categoryAttributes);
 
 /* Add file and PHP resolvers (keep oder of resolvers!) */
 $modx->log(modX::LOG_LEVEL_INFO, 'Adding file and PHP resolvers to category vehicle...');
