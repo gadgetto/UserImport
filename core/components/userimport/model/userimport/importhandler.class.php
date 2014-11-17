@@ -79,6 +79,9 @@ class ImportHandler {
         'comment',     // text
     );
 
+    /** @var boolean $legacyFgetcsv If fgetcsv() is used under PHP version < 5.3.0 */
+    public $legacyFgetcsv = false;
+
 
     /**
      * Constructor for ImportHandler object.
@@ -95,7 +98,12 @@ class ImportHandler {
             'use_multibyte' => (boolean)$this->modx->getOption('use_multibyte', null, false),
             'encoding'      => $this->modx->getOption('modx_charset', null, 'UTF-8'),
         ), $config);
+        
+        // Since PHP 5.3.0 the 'escape' parameter was added to the fgetcsv() function,
+        // using on PHP 5.2 will throw a warning and not return an array.
+        $this->legacyFgetcsv = version_compare(PHP_VERSION, '5.3.0', '<');
     }
+    
 
     /**
      * Destructor for ImportHandler object.
@@ -174,7 +182,11 @@ class ImportHandler {
      * @return void
      */
     private function _getHeader() {
-        $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape); 
+        if ($this->legacyFgetcsv) {
+            $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure); 
+        } else {
+            $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape); 
+        }
     }
 
     /**
@@ -226,9 +238,15 @@ class ImportHandler {
         } else {
             $lineCount = -1; // loop limit is ignored 
         }
-        while ($lineCount < $this->batchSize && 
-            ($row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape)) !== false) { 
-
+        while ($lineCount < $this->batchSize) {
+            
+            if ($this->legacyFgetcsv) {
+                $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure);
+            } else {
+                $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape);
+            }
+            if (!$row) { break; }
+            
             // assign row values to user fields array
             $importUsers[] = $this->_combineArrays($this->userFields, $row);
 
@@ -239,7 +257,7 @@ class ImportHandler {
         } 
         return $importUsers; 
     }
-
+    
     /**
      * Combines predefined $userFields array with imported values.
      *
