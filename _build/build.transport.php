@@ -91,6 +91,25 @@ $builder->registerNamespace(PKG_NAME_LOWER, false, true, '{core_path}components/
 $modx->log(modX::LOG_LEVEL_INFO, 'Prepared Transport Package and registered Namespace.');
 flush();
 
+/*
+ * Add userImport Events
+ */
+$events = include $sources['data'].'transport.events.php';
+if (!is_array($events)) {
+    $modx->log(modX::LOG_LEVEL_ERROR,'Could not package in events.');
+} else {
+    $attributes = array (
+        xPDOTransport::PRESERVE_KEYS => true,
+        xPDOTransport::UPDATE_OBJECT => true,
+    );
+    foreach ($events as $event) {
+        $vehicle = $builder->createVehicle($event,$attributes);
+        $builder->putVehicle($vehicle);
+    }
+    $modx->log(xPDO::LOG_LEVEL_INFO,'Packaged in '.count($events).' userImport events.');
+}
+unset ($events, $event, $attributes);
+
 /* Add menu and action */
 $menu = include $sources['data'].'transport.menu.php';
 if (empty($menu)) {

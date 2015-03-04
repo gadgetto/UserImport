@@ -211,6 +211,8 @@ class ImportHandler {
             return false;
         }
 
+        $this->modx->invokeEvent('onBeforeUserImport', array('groups' => $groups));
+
         // Main impot loop
         $importCount = 0;
         foreach ($newUsers as $row => $newUser) {
@@ -218,6 +220,7 @@ class ImportHandler {
                 $importCount++;
             }
         }
+        $this->modx->invokeEvent('onAfterUserImport', array('groups' => $groups));
         return $importCount;
     }
 
