@@ -104,6 +104,9 @@ class UserImportProcessor extends modProcessor {
         // Get autoUsername setting (username = email?)
         $autoUsername = $this->getProperty('autousername') ? true : false;
 
+        // Get setImportmarker setting (write import-markers to extended fields?)
+        $setImportmarker = $this->getProperty('setimportmarker') ? true : false;
+
         // Get selected MODX user group(s)
         $usergroups = $this->getProperty('usergroups');
         $groups = array();
@@ -157,7 +160,7 @@ class UserImportProcessor extends modProcessor {
             return $this->failure();
         }
         
-        $result = $this->importhandler->importUsers($batchsize, $groups, $role, $autoUsername);
+        $result = $this->importhandler->importUsers($batchsize, $groups, $role, $autoUsername, $setImportmarker);
 
 
         $this->modx->log(modX::LOG_LEVEL_INFO, $this->modx->lexicon('userimport.import_users_log_finished').$result);

@@ -62,9 +62,11 @@ class ImportHandler {
 
     /** @var array $userFields The internal MODX user field names (from modUser and modProfile) */
     public $userFields = array(
-        'username',    // varchar 100
         'email',       // varchar 100
+        'username',    // varchar 100
         'fullname',    // varchar 100
+        'phone',       // varchar 100
+        'mobilephone', // varchar 100
         'dob',         // int 10 (unix timestamp)
         'gender',      // int 1 (1 = male, 2 = female, 3 = other)
         'address',     // text
@@ -72,11 +74,10 @@ class ImportHandler {
         'city',        // varchar 255
         'state',       // varchar 25
         'zip',         // varchar 25
-        'phone',       // varchar 100
-        'mobilephone', // varchar 100
         'fax',         // varchar 100
-        'website',     // varchar 255
+        'photo',       // varchar 255
         'comment',     // text
+        'website',     // varchar 255
     );
 
     /** @var boolean $legacyFgetcsv If fgetcsv() is used under PHP version < 5.3.0 */
@@ -197,9 +198,10 @@ class ImportHandler {
      * @param array $groups Array of MODX User Group ids
      * @param int $role A MODX User Role id
      * @param bool $autoUsername Automatically use email address as username?
+     * @param bool $setImportmarker Write import-markers to extended fields??
      * @return mixed int $importCount || false
      */
-    public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false) {
+    public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false, $setImportmarker = true) {
         $this->batchSize = $batchSize;
 
         if ($this->hasHeader) {
@@ -213,10 +215,10 @@ class ImportHandler {
 
         $this->modx->invokeEvent('onBeforeUserImport', array('groups' => $groups));
 
-        // Main impot loop
+        // Main import loop
         $importCount = 0;
         foreach ($newUsers as $row => $newUser) {
-            if ($this->_saveUser($row, $newUser, $groups, $role, $autoUsername)) {
+            if ($this->_saveUser($row, $newUser, $groups, $role, $autoUsername, $setImportmarker)) {
                 $importCount++;
             }
         }
@@ -276,7 +278,6 @@ class ImportHandler {
         
         // More fields than values
         if ($fieldscount > $valuescount) {
-            $more = $fieldscount - $valuescount;
             // How many fields are we missing at the end of the $values array?
             $more = $fieldscount - $valuescount;
             // Add empty strings to ensure arrays $fields and $values have same number of elements
@@ -284,8 +285,8 @@ class ImportHandler {
                 $values[] = '';
             }
         
-        // More values than fields 
-        } elseif ($valuescount > $fieldscount) {
+        // More values than fields
+        } elseif ($valuescount > $fieldscount) {            
             // Slice extra values        
             $values = array_slice($values, 0, $fieldscount);
         }
@@ -302,29 +303,13 @@ class ImportHandler {
      * @param array $groups The MODX User Group IDs for the new MODX user
      * @param int $role The MODX User Role ID for the new MODX user
      * @param bool $autoUsername Automatically use email address as username?
+     * @param bool $setImportmarker Write import-markers to extended fields??
      * @return boolean
      */
-    private function _saveUser($row, $fieldvalues, $groups, $role, $autoUsername) {
+    private function _saveUser($row, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker) {
         // (array key 0 = row number 1)
         $row = $row + 1;
-        
-        // username -> required!
-        if ($autoUsername) {
-            $fieldvalues['username'] = $fieldvalues['email'];
-        }
-        if (empty($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_username'));
-            return false;
-        }
-        if ($this->usernameExists($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_ae').$fieldvalues['username']);
-            return false;
-        }
-        if (strlen($fieldvalues['username']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_max_len'));
-            return false;
-        }
-        
+
         // email -> required!
         if (empty($fieldvalues['email'])) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_email'));
@@ -342,10 +327,39 @@ class ImportHandler {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_email_max_len'));
             return false;
         }
-        
+
+        // username -> required!
+        if ($autoUsername) {
+            $fieldvalues['username'] = $fieldvalues['email'];
+        }
+        if (empty($fieldvalues['username'])) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_username'));
+            return false;
+        }
+        if ($this->usernameExists($fieldvalues['username'])) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_ae').$fieldvalues['username']);
+            return false;
+        }
+        if (strlen($fieldvalues['username']) > 100) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_max_len'));
+            return false;
+        }
+
         // fullname
         if (strlen($fieldvalues['fullname']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fullname_max_len'));
+            return false;
+        }
+
+        // phone
+        if (strlen($fieldvalues['phone']) > 100) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
+            return false;
+        }
+
+        // mobilephone
+        if (strlen($fieldvalues['mobilephone']) > 100) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
             return false;
         }
 
@@ -400,21 +414,21 @@ class ImportHandler {
             return false;
         }
 
-        // phone
-        if (strlen($fieldvalues['phone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
-            return false;
-        }
-
-        // mobilephone
-        if (strlen($fieldvalues['mobilephone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
-            return false;
-        }
-
         // fax
         if (strlen($fieldvalues['fax']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fax_max_len'));
+            return false;
+        }
+
+        // photo
+        if (strlen($fieldvalues['photo']) > 255) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_photo_max_len'));
+            return false;
+        }
+
+        // comment
+        if (strlen($fieldvalues['comment']) > 65535) {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_comment_max_len'));
             return false;
         }
 
@@ -425,7 +439,7 @@ class ImportHandler {
         }
 
         $userSaved = false;
-        
+
         // New modUser
         $user = $this->modx->newObject('modUser');
         $password = $user->generatePassword(8);
@@ -442,6 +456,8 @@ class ImportHandler {
         $userProfile->set('fullname',    $fieldvalues['fullname']);
         
 		// Add modUserProfile -> optional fields
+        $userProfile->set('phone',       $fieldvalues['phone']       ? $fieldvalues['phone']       : '');
+        $userProfile->set('mobilephone', $fieldvalues['mobilephone'] ? $fieldvalues['mobilephone'] : '');
         $userProfile->set('dob',         $fieldvalues['dob']         ? $fieldvalues['dob']         : '0');
         $userProfile->set('gender',      $fieldvalues['gender']      ? $fieldvalues['gender']      : '0');
         $userProfile->set('address',     $fieldvalues['address']     ? $fieldvalues['address']     : '');
@@ -449,15 +465,22 @@ class ImportHandler {
         $userProfile->set('city',        $fieldvalues['city']        ? $fieldvalues['city']        : '');
         $userProfile->set('state',       $fieldvalues['state']       ? $fieldvalues['state']       : '');
         $userProfile->set('zip',         $fieldvalues['zip']         ? $fieldvalues['zip']         : '');
-        $userProfile->set('phone',       $fieldvalues['phone']       ? $fieldvalues['phone']       : '');
-        $userProfile->set('mobilephone', $fieldvalues['mobilephone'] ? $fieldvalues['mobilephone'] : '');
         $userProfile->set('fax',         $fieldvalues['fax']         ? $fieldvalues['fax']         : '');
+        $userProfile->set('photo',       $fieldvalues['photo']       ? $fieldvalues['photo']       : '');                
+        $userProfile->set('comment',     $fieldvalues['comment']     ? $fieldvalues['comment']     : '');
         $userProfile->set('website',     $fieldvalues['website']     ? $fieldvalues['website']     : '');
 
-		// Add modUserProfile -> import info to comment field
-        $importedon = strftime('%Y-%m-%d %H:%M:%S');
-        $userProfile->set('comment', 'Imported: '.$importedon.' ('.$this->importKey.')');
-        
+		// Add import info to extended profile field (if option is activated)
+		if ($setImportmarker) {
+            $importInfo = array(
+                'UserImport' => array(
+                    'Date' => strftime('%Y-%m-%d %H:%M:%S'),
+                    'Key'  => $this->importKey,
+                )
+            );
+            $userProfile->set('extended', $importInfo);
+		}
+
         $user->addOne($userProfile);
         
 		if ($user->save()) {

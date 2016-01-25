@@ -119,6 +119,15 @@ UserImport.panel.Import = function(config) {
                             ,boxLabel: _('userimport.import_users_email_as_username')
                             ,description: _('userimport.import_users_email_as_username_desc')
                             ,inputValue: 1
+                        },{
+                            xtype: 'xcheckbox'
+                            ,id: 'userimport-set-importmarker'
+                            ,name: 'setimportmarker'
+                            ,hideLabel: true
+                            ,boxLabel: _('userimport.import_users_set_importmarker')
+                            ,description: _('userimport.import_users_set_importmarker_desc')
+                            ,checked: true
+                            ,inputValue: 1
                         }]
                     },{
                         xtype: 'fieldset'
