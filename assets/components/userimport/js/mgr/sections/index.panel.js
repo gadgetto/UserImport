@@ -61,22 +61,18 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         if (btn == 'cancel') {
             return;
         }
-        if (this.console == null || this.console == undefined) {
-            this.console = MODx.load({
-                xtype: 'modx-console'
-                ,register: register
-                ,topic: topic
-                ,listeners: {
-                    'shutdown': {fn:function() {
-                        //refresh page to reset fields
-                        //location.href = MODx.config.manager_url + '?a=' + MODx.request.a + '&action=import';
-                    }
-                    ,scope:this}
+        this.console = MODx.load({
+            xtype: 'modx-console'
+            ,register: register
+            ,topic: topic
+            ,listeners: {
+                'shutdown': {fn:function() {
+                    //refresh page to reset fields
+                    //location.href = MODx.config.manager_url + '?a=' + MODx.request.a + '&action=import';
                 }
-            });
-        } else {
-            this.console.setRegister(register,topic);
-        }
+                ,scope:this}
+            }
+        });
         this.console.show(Ext.getBody());
 
         // get selected user groups from tree
@@ -85,7 +81,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         var tree = Ext.getCmp('userimport-tree-usergroups');
         selNodes = tree.getChecked();
         Ext.each(selNodes, function(node){
-            if (nodeIDs!='') {
+            if (nodeIDs!=='') {
                 nodeIDs += ',';
             }
             nodeIDs += node.id;
@@ -122,7 +118,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,cls: 'primary-button'
             ,handler: this.startUserImport
             ,scope: this
-        },'-')
+        },'-');
         buttons.push({
             text: _('help_ex')
             ,id: 'button-help'
@@ -131,7 +127,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
                 MODx.loadHelpPane();
             }
             ,scope: this
-        })
+        });
         return buttons;
     }
 });

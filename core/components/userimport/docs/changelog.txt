@@ -1,5 +1,6 @@
 Changelog for UserImport
 
+- fixed a problem when console window is closed and reopened without page reload
 - [#4] extented fields support
 - make writing of import-infos optional via import options
 - import-infos are now written to extended profile field
