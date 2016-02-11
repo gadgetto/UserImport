@@ -1,5 +1,6 @@
 Changelog for UserImport
 
+- [#4] extented fields support
 - make writing of import-infos optional via import options
 - import-infos are now written to extended profile field
 - added missing profile fields to import (except extended field!)

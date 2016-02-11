@@ -79,6 +79,9 @@ class ImportHandler {
         'comment',     // text
         'website',     // varchar 255
     );
+    
+    /** @var array $extendedFields The extended user-field names (modProfile) */
+    public $extendedFields = array();
 
     /** @var boolean $legacyFgetcsv If fgetcsv() is used under PHP version < 5.3.0 */
     public $legacyFgetcsv = false;
@@ -122,14 +125,14 @@ class ImportHandler {
      * 
      * @access public
      * @param string $filePath
-     * @param bool $hasHeader (default: false)
+     * @param bool $hasHeader (default: true)
      * @param string $delimiter (default: ,)
      * @param string $enclosure (default: ")
      * @param string $escape (default: \)
      * @param int $lineLength (default: 4096)
      * @return boolean
      */
-    public function init($filePath, $hasHeader = false, $delimiter = ',', $enclosure = '"', $escape = '\\', $lineLength = 4096) {
+    public function init($filePath, $hasHeader = true, $delimiter = ',', $enclosure = '"', $escape = '\\', $lineLength = 4096) {
         if ($this->_openFile($filePath) == false) {
             return false;
         }
@@ -188,6 +191,11 @@ class ImportHandler {
         } else {
             $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape); 
         }
+        // Fields that aren't predefined in $this->userFields, are treated as extended user-fields
+        $this->extendedFields = array_diff($this->header, $this->userFields);
+        if (!empty($this->extendedFields)) {
+    		$this->modx->log(modX::LOG_LEVEL_INFO, $this->modx->lexicon('userimport.import_users_log_extended_detected').implode(',', $this->extendedFields));
+        }
     }
 
     /**
@@ -245,6 +253,7 @@ class ImportHandler {
         }
         while ($lineCount < $this->batchSize) {
             
+            // Get next row from CSV file
             if ($this->legacyFgetcsv) {
                 $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure);
             } else {
@@ -252,8 +261,14 @@ class ImportHandler {
             }
             if (!$row) { break; }
             
-            // assign row values to user fields array
-            $importUsers[] = $this->_combineArrays($this->userFields, $row);
+            // With header row (field names available)
+            if ($this->header) {
+                $importUsers[] = $this->_combineArrays($this->header, $this->extendedFields, $row);
+            
+            // Without header row (no field names available)
+            } else {
+                $importUsers[] = $this->_combineArraysSeq($this->userFields, $row);
+            }
 
             if ($this->batchSize > 0) {
                 $lineCount++;
@@ -262,16 +277,45 @@ class ImportHandler {
         } 
         return $importUsers; 
     }
-    
+
     /**
-     * Combines predefined $userFields array with imported values.
+     * Combines header keys with row values.
+     * (CSV file first row is header row)
+     *
+     * @access private
+     * @param array $fields
+     * @param array $extendedFields
+     * @param array $values 
+     * @return array $combined The combined array of one row
+     */
+    private function _combineArrays(array $fields, array $extendedFields, array $values) {
+        
+        $combined = array_combine($fields, $values);
+        
+        // Get elements from $combined which doesnt exist in $userFields
+        $extended = array();
+        foreach ($extendedFields as $key) {
+            if (array_key_exists($key, $combined) && ($combined[$key] != '')) {
+                $extended[$key] = $combined[$key];
+                unset($combined[$key]);
+            }
+        }
+        if (!empty($extended)) {
+            $combined['extended'] = $extended;
+        }
+        return $combined;
+    }
+
+    /**
+     * Combines predefined $userFields array with imported values based on sequence of values.
+     * (CSV file has no header row)
      *
      * @access private
      * @param array $fields
      * @param array $values 
-     * @return array $combined The combined array
+     * @return array $combined The combined array of one row
      */
-    private function _combineArrays($fields, $values) {
+    private function _combineArraysSeq(array $fields, array $values) {
         
         $fieldscount = count($fields);
         $valuescount = count($values);
@@ -286,7 +330,7 @@ class ImportHandler {
             }
         
         // More values than fields
-        } elseif ($valuescount > $fieldscount) {            
+        } elseif ($valuescount > $fieldscount) {
             // Slice extra values        
             $values = array_slice($values, 0, $fieldscount);
         }
@@ -469,8 +513,9 @@ class ImportHandler {
         $userProfile->set('photo',       $fieldvalues['photo']       ? $fieldvalues['photo']       : '');                
         $userProfile->set('comment',     $fieldvalues['comment']     ? $fieldvalues['comment']     : '');
         $userProfile->set('website',     $fieldvalues['website']     ? $fieldvalues['website']     : '');
-
+        
 		// Add import info to extended profile field (if option is activated)
+		$importInfo = array();
 		if ($setImportmarker) {
             $importInfo = array(
                 'UserImport' => array(
@@ -478,8 +523,17 @@ class ImportHandler {
                     'Key'  => $this->importKey,
                 )
             );
-            $userProfile->set('extended', $importInfo);
 		}
+        
+        // Add extended fields (combined with import info) if any
+        if (!empty($fieldvalues['extended']) && is_array($fieldvalues['extended'])) {
+            $extended = array_merge($fieldvalues['extended'], $importInfo);
+        } else {
+            $extended = $importInfo;
+        }
+        if (!empty($extended) && is_array($extended)) {
+            $userProfile->set('extended', $extended);
+        }
 
         $user->addOne($userProfile);
         

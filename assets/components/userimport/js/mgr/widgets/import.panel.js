@@ -48,6 +48,7 @@ UserImport.panel.Import = function(config) {
                         ,boxLabel: _('userimport.import_users_first_row_headers')
                         ,description: MODx.expandHelp ? '' : _('userimport.import_users_first_row_headers_desc')
                         ,inputValue: 1
+                        ,checked: true
                     },{
                         xtype: MODx.expandHelp ? 'label' : 'hidden'
                         ,forId: 'userimport-has-header'
