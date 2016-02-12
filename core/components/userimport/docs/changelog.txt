@@ -1,5 +1,6 @@
 Changelog for UserImport
 
+- imported users now at least gets assigned role "member" when joining user groups
 - fixed a problem when console window is closed and reopened without page reload
 - [#4] extented fields support
 - make writing of import-infos optional via import options

@@ -544,10 +544,7 @@ class ImportHandler {
             // Add user to MODX user group and assign role
             if (isset($groups) && is_array($groups) && !empty($groups)) {
                 foreach ($groups as $group) {
-                    // With the current joinGroup method of the MODX moduser.class.php it's not possible 
-                    // to programmatically add a user to a group without assigning a role.
-                    // So we need to use our own modified joingGroup method until the bug in MODX is fixed!
-                    if (!$this->joinGroup(intval($group), intval($role), $user)) {
+                    if (!$user->joinGroup(intval($group), intval($role))) {
                         $userSaved = false;
                         break;
                     }
@@ -719,73 +716,5 @@ class ImportHandler {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Join a User Group, and optionally assign a Role.
-     * (This method is borrowed from MODX moduser.class.php and 
-     * modified, as the original method has some bugs in 2.3.1.
-     * All references to xpdo are replaced with modx.)
-     *
-     * @access public
-     * @param mixed $groupId Either the name or ID of the User Group to join.
-     * @param mixed $roleId Optional. Either the name or ID of the Role to assign to for the group.
-     * @param modUser $user The user object (Needed because $this is not a modUser object as in moduser.class.php)
-     * @return boolean True if successful.
-     */
-    public function joinGroup($groupId, $roleId = null, $user) {
-        $joined = false;
-
-        $groupPk = is_string($groupId) ? array('name' => $groupId) : $groupId;
-        /** @var modUserGroup $userGroup */
-        $userGroup = $this->modx->getObject('modUserGroup', $groupPk);
-        if (empty($userGroup)) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, 'User Group not found with key: '.$groupId);
-            return $joined;
-        }
-
-        /** @var modUserGroupRole $role */
-        if (!empty($roleId)) {
-            $rolePk = is_string($roleId) ? array('name' => $roleId) : $roleId;
-            $role = $this->modx->getObject('modUserGroupRole', $rolePk);
-            if (empty($role)) {
-                //$this->xpod->log(xPDO::LOG_LEVEL_ERROR,'Role not found with key: '.$role);
-                $this->modx->log(modX::LOG_LEVEL_ERROR, 'Role not found with key: '.$roleId); // bugfix
-                return $joined;
-            }
-        }
-
-        /** @var modUserGroupMember $member */
-        $member = $this->modx->getObject('modUserGroupMember', array(
-            //'member' => $this->get('id'), // Original line from moduser.class.php
-            'member' => $user->get('id'),   // Needed because $this is not a modUser object as in moduser.class.php
-            'user_group' => $userGroup->get('id'),
-        ));
-        if (empty($member)) {
-            $rank = count($user->getMany('UserGroupMembers'));
-            $member = $this->modx->newObject('modUserGroupMember');
-            //$member->set('member', $this->get('id')); // Original line from moduser.class.php
-            $member->set('member', $user->get('id'));   // Needed because $this is not a modUser object as in moduser.class.php
-            $member->set('user_group', $userGroup->get('id'));
-            $member->set('rank', $rank);
-            if (!empty($role)) {
-                $member->set('role', $role->get('id'));
-            }
-            // -- additional code: allow joining User Groups without assigning a role
-            if ($roleId === '0' || $roleId === 0) { 
-                $member->set('role', 0);
-            }
-            // -- end: additional code
-            $joined = $member->save();
-            if (!$joined) {
-                $this->modx->log(modX::LOG_LEVEL_ERROR, 'An unknown error occurred preventing adding the User to the User Group.');
-            } else {
-                //unset($_SESSION["modx.user.{$this->get('id')}.userGroupNames"]); // Original line from moduser.class.php
-                unset($_SESSION["modx.user.{$user->get('id')}.userGroupNames"]);   // Needed because $this is not a modUser object as in moduser.class.php
-            }
-        } else {
-            $joined = true;
-        }
-        return $joined;
     }
 }
