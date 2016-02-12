@@ -263,7 +263,7 @@ class ImportHandler {
             
             // With header row (field names available)
             if ($this->header) {
-                $importUsers[] = $this->_combineArrays($this->header, $this->extendedFields, $row);
+                $importUsers[] = $this->_combineArrays($this->header, $row);
             
             // Without header row (no field names available)
             } else {
@@ -284,17 +284,16 @@ class ImportHandler {
      *
      * @access private
      * @param array $fields
-     * @param array $extendedFields
      * @param array $values 
      * @return array $combined The combined array of one row
      */
-    private function _combineArrays(array $fields, array $extendedFields, array $values) {
+    private function _combineArrays(array $fields, array $values) {
         
         $combined = array_combine($fields, $values);
         
-        // Get elements from $combined which doesnt exist in $userFields
+        // Get elements from $combined which doesnt exist in $this->userFields
         $extended = array();
-        foreach ($extendedFields as $key) {
+        foreach ($this->extendedFields as $key) {
             if (array_key_exists($key, $combined) && ($combined[$key] != '')) {
                 $extended[$key] = $combined[$key];
                 unset($combined[$key]);
@@ -390,19 +389,19 @@ class ImportHandler {
         }
 
         // fullname
-        if (strlen($fieldvalues['fullname']) > 100) {
+        if (!empty($fieldvalues['fullname']) && strlen($fieldvalues['fullname']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fullname_max_len'));
             return false;
         }
 
         // phone
-        if (strlen($fieldvalues['phone']) > 100) {
+        if (!empty($fieldvalues['phone']) && strlen($fieldvalues['phone']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
             return false;
         }
 
         // mobilephone
-        if (strlen($fieldvalues['mobilephone']) > 100) {
+        if (!empty($fieldvalues['mobilephone']) && strlen($fieldvalues['mobilephone']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
             return false;
         }
@@ -429,55 +428,55 @@ class ImportHandler {
         }
 
         // address
-        if (strlen($fieldvalues['address']) > 65535) {
+        if (!empty($fieldvalues['address']) && strlen($fieldvalues['address']) > 65535) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_address_max_len'));
             return false;
         }
 
         // country
-        if (strlen($fieldvalues['country']) > 255) {
+        if (!empty($fieldvalues['country']) && strlen($fieldvalues['country']) > 255) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_country_max_len'));
             return false;
         }
 
         // city
-        if (strlen($fieldvalues['city']) > 255) {
+        if (!empty($fieldvalues['city']) && strlen($fieldvalues['city']) > 255) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_city_max_len'));
             return false;
         }
 
         // state
-        if (strlen($fieldvalues['state']) > 25) {
+        if (!empty($fieldvalues['state']) && strlen($fieldvalues['state']) > 25) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_state_max_len'));
             return false;
         }
 
         // zip
-        if (strlen($fieldvalues['zip']) > 25) {
+        if (!empty($fieldvalues['zip']) && strlen($fieldvalues['zip']) > 25) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_zip_max_len'));
             return false;
         }
 
         // fax
-        if (strlen($fieldvalues['fax']) > 100) {
+        if (!empty($fieldvalues['fax']) && strlen($fieldvalues['fax']) > 100) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fax_max_len'));
             return false;
         }
 
         // photo
-        if (strlen($fieldvalues['photo']) > 255) {
+        if (!empty($fieldvalues['photo']) && strlen($fieldvalues['photo']) > 255) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_photo_max_len'));
             return false;
         }
 
         // comment
-        if (strlen($fieldvalues['comment']) > 65535) {
+        if (!empty($fieldvalues['comment']) && strlen($fieldvalues['comment']) > 65535) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_comment_max_len'));
             return false;
         }
 
         // website
-        if (strlen($fieldvalues['website']) > 255) {
+        if (!empty($fieldvalues['website']) && strlen($fieldvalues['website']) > 255) {
     		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_website_max_len'));
             return false;
         }
@@ -496,23 +495,6 @@ class ImportHandler {
 		
 		// Add modUserProfile -> required fields
         $userProfile = $this->modx->newObject('modUserProfile');
-        $userProfile->set('email',       $fieldvalues['email']);
-        $userProfile->set('fullname',    $fieldvalues['fullname']);
-        
-		// Add modUserProfile -> optional fields
-        $userProfile->set('phone',       $fieldvalues['phone']       ? $fieldvalues['phone']       : '');
-        $userProfile->set('mobilephone', $fieldvalues['mobilephone'] ? $fieldvalues['mobilephone'] : '');
-        $userProfile->set('dob',         $fieldvalues['dob']         ? $fieldvalues['dob']         : '0');
-        $userProfile->set('gender',      $fieldvalues['gender']      ? $fieldvalues['gender']      : '0');
-        $userProfile->set('address',     $fieldvalues['address']     ? $fieldvalues['address']     : '');
-        $userProfile->set('country',     $fieldvalues['country']     ? $fieldvalues['country']     : '');
-        $userProfile->set('city',        $fieldvalues['city']        ? $fieldvalues['city']        : '');
-        $userProfile->set('state',       $fieldvalues['state']       ? $fieldvalues['state']       : '');
-        $userProfile->set('zip',         $fieldvalues['zip']         ? $fieldvalues['zip']         : '');
-        $userProfile->set('fax',         $fieldvalues['fax']         ? $fieldvalues['fax']         : '');
-        $userProfile->set('photo',       $fieldvalues['photo']       ? $fieldvalues['photo']       : '');                
-        $userProfile->set('comment',     $fieldvalues['comment']     ? $fieldvalues['comment']     : '');
-        $userProfile->set('website',     $fieldvalues['website']     ? $fieldvalues['website']     : '');
         
 		// Add import info to extended profile field (if option is activated)
 		$importInfo = array();
@@ -527,14 +509,12 @@ class ImportHandler {
         
         // Add extended fields (combined with import info) if any
         if (!empty($fieldvalues['extended']) && is_array($fieldvalues['extended'])) {
-            $extended = array_merge($fieldvalues['extended'], $importInfo);
+            $fieldvalues['extended'] = array_merge($fieldvalues['extended'], $importInfo);
         } else {
-            $extended = $importInfo;
+            $fieldvalues['extended'] = $importInfo;
         }
-        if (!empty($extended) && is_array($extended)) {
-            $userProfile->set('extended', $extended);
-        }
-
+        
+        $userProfile->fromArray($fieldvalues);
         $user->addOne($userProfile);
         
 		if ($user->save()) {
