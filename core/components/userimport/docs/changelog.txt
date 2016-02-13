@@ -1,5 +1,7 @@
 Changelog for UserImport
 
+UserImport 1.0.0-rc1 (2016-02-13)
+--------------------------------------------------
 - extended fields support via Json strings added
 - fixed some "undefined" messages and simplified profile array handling
 - imported users now at least gets assigned role "member" when joining user groups
