@@ -78,6 +78,7 @@ class ImportHandler {
         'photo',       // varchar 255
         'comment',     // text
         'website',     // varchar 255
+        'extended',    // text
     );
     
     /** @var array $extendedFields The extended user-field names (modProfile) */
@@ -481,6 +482,19 @@ class ImportHandler {
             return false;
         }
 
+        // extended (can be array or json string!)
+        if (!empty($fieldvalues['extended']) && is_string($fieldvalues['extended'])) {
+
+            // Try to convert json to array (returns NULL if not)
+            $extendedArray = $this->jsonToArray($fieldvalues['extended']);
+            // Check if conversion was successfull
+            if (!is_array($extendedArray)) {
+        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_extended_invalid_json').$fieldvalues['extended']);
+                return false;
+            }
+            $fieldvalues['extended'] = $extendedArray;
+        }
+
         $userSaved = false;
 
         // New modUser
@@ -696,5 +710,16 @@ class ImportHandler {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Converts json string to array.
+     *
+     * @access public
+     * @param string $json The string to convert
+     * @return mixed array || NULL
+     */
+    public function jsonToArray($json) {
+        return json_decode($json, true);
     }
 }

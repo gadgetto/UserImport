@@ -80,6 +80,7 @@ $_lang['userimport.import_users_log_err_email_ae']              = 'Non importé.
 $_lang['userimport.import_users_log_err_email_invalid']         = 'Non importé. Adresse email invalide : ';
 $_lang['userimport.import_users_log_err_dob_invalid']           = 'Non importé. Date de naissance invalide : ';
 $_lang['userimport.import_users_log_err_gender_invalid']        = 'Non importé. Genre invalide : ';
+$_lang['userimport.import_users_log_err_extended_invalid_json'] = 'Not imported. Invalid extended fields json string: ';
 $_lang['userimport.import_users_log_ns_file']                   = 'Sélectionner un fichier CSV.';
 $_lang['userimport.import_users_log_wrong_filetype']            = 'Seul les fichiers CSV sont acceptés.';
 $_lang['userimport.import_users_log_no_class']                  = 'La classe ImportHandler ne peut pas être instanciée.';

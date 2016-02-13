@@ -80,6 +80,7 @@ $_lang['userimport.import_users_log_err_email_ae']              = 'Nicht importi
 $_lang['userimport.import_users_log_err_email_invalid']         = 'Nicht importiert. Email Adresse ungültig: ';
 $_lang['userimport.import_users_log_err_dob_invalid']           = 'Nicht importiert. Geburtsdatum ungültig: ';
 $_lang['userimport.import_users_log_err_gender_invalid']        = 'Nicht importiert. Geschlecht ungültig: ';
+$_lang['userimport.import_users_log_err_extended_invalid_json'] = 'Nicht importiert. Extended Fields Json String ungültig: ';
 $_lang['userimport.import_users_log_ns_file']                   = 'Bitte wählen Sie eine CSV Datei.';
 $_lang['userimport.import_users_log_wrong_filetype']            = 'Nur CSV Dateien sind zulässig.';
 $_lang['userimport.import_users_log_no_class']                  = 'ImportHandler Klasse konnte nicht instanziert werden.';
