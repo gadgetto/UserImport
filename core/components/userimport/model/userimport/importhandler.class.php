@@ -79,6 +79,7 @@ class ImportHandler {
         'comment',     // text
         'website',     // varchar 255
         'extended',    // text
+        'password',    // varchar 255
     );
     
     /** @var array $extendedFields The extended user-field names (modProfile) */
@@ -499,7 +500,9 @@ class ImportHandler {
 
         // New modUser
         $user = $this->modx->newObject('modUser');
-        $password = $user->generatePassword(8);
+        
+        // Use provided password or auto-generate one
+        $password = $this->_setPassword($user,$fieldvalues,$row);
         
         // Add modUser -> required fields
         $user->set('username', $fieldvalues['username']);
@@ -554,6 +557,58 @@ class ImportHandler {
     		$this->modx->log(modX::LOG_LEVEL_INFO, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_imported_user').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
 		}
 		return $userSaved;
+    }
+    
+    /**
+     * Looks for a field called "password" in the import file, validates it, and defaults to an auto-generated password
+     *
+     * @param modUser $user
+     * @param array $fieldvalues
+     * @param int $row
+     * @return bool|string
+     */
+    private function _setPassword(modUser &$user, $fieldvalues, $row) {
+
+        if(array_key_exists('password',$fieldvalues)) {
+            if($providedPassword = $this->_validateProvidedPassword($fieldvalues['password'],$row)) {
+                $password = $providedPassword;
+            }
+            else {
+                $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_password_ignored'));
+                $password = $user->generatePassword(8);
+            }
+        }
+        else {
+            $password = $user->generatePassword(8);
+        }
+
+        return $password;
+
+    }
+
+    /**
+     * Check that the password provided in the import file is suitable for use
+     *
+     * @param $password
+     * @param $row
+     * @return bool|string Returns false if not valid
+     */
+    private function _validateProvidedPassword($password,$row) {
+        
+        if(!is_string($password)) {
+
+            $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_password_not_string'));
+
+            return FALSE;
+        }
+        if(strlen($password) < 7) {
+
+            $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_password_len'));
+
+            return FALSE;
+        }
+
+        return $password;
     }
     
     /**
