@@ -91,6 +91,7 @@ $_lang['userimport.import_users_log_ns_grp']                    = 'Bitte wählen
 $_lang['userimport.import_users_log_finished']                  = 'Import abgeschlossen. Erfolgreich importierte Benutzer: ';
 $_lang['userimport.import_users_log_failed']                    = 'Import fehlgeschlagen. Bitte überprüfen Sie die Fehlermeldungen.';
 $_lang['userimport.import_users_log_err_open_file']             = 'Fehler beim Öffnen der Datei.';
+$_lang['userimport.import_users_log_diff_fields_values_count']  = 'Zeile mit unterschiedlicher Feld-Wert Anzahl gefunden - wird nicht importiert: ';
 
 $_lang['userimport.import_users_log_err_email_max_len']         = 'Nicht importiert. Max. Feldlänge für email überschritten.';
 $_lang['userimport.import_users_log_err_username_max_len']      = 'Nicht importiert. Max. Feldlänge für username überschritten.';

@@ -265,7 +265,8 @@ class ImportHandler {
             
             // With header row (field names available)
             if ($this->header) {
-                $importUsers[] = $this->_combineArrays($this->header, $row);
+                $user = $this->_combineArrays($this->header, $row);
+                if ($user) { $importUsers[] = $user; }
             
             // Without header row (no field names available)
             } else {
@@ -287,10 +288,16 @@ class ImportHandler {
      * @access private
      * @param array $fields
      * @param array $values 
-     * @return array $combined The combined array of one row
+     * @return mixed array $combined The combined array of one row || false
      */
     private function _combineArrays(array $fields, array $values) {
         
+        // Sanity check of row
+        if (count($fields) != count($values)) {
+    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_diff_fields_values_count').print_r($values, true));
+            return false;
+        }
+
         $combined = array_combine($fields, $values);
         
         // Get elements from $combined which doesnt exist in $this->userFields

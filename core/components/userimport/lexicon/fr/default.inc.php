@@ -91,6 +91,7 @@ $_lang['userimport.import_users_log_ns_grp']                    = 'Veuillez sél
 $_lang['userimport.import_users_log_finished']                  = 'Import terminé. Utilisateurs importés avec succès : ';
 $_lang['userimport.import_users_log_failed']                    = 'Import échoué. Vérifiez les messages d\'erreurs.';
 $_lang['userimport.import_users_log_err_open_file']             = 'Erreur à l\'ouverture du fichier.';
+$_lang['userimport.import_users_log_diff_fields_values_count']  = 'Row with different field-values count detected - won\'t be imported: ';
 
 $_lang['userimport.import_users_log_err_email_max_len']         = 'Non importé. Longueur maximale du champ email dépassée.';
 $_lang['userimport.import_users_log_err_username_max_len']      = 'Non importé. Longueur maximale du champ username dépassée.';
