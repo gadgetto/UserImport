@@ -1,5 +1,11 @@
 Changelog for UserImport
 
+UserImport 1.0.0-pl (2016-02-24)
+--------------------------------------------------
+- added sanity check for for equal fields - values count in CSV data
+- [#7] added feature to import passwords via CSV - thanks @prioritypie
+
+
 UserImport 1.0.0-rc1 (2016-02-13)
 --------------------------------------------------
 - extended fields support via Json strings added
