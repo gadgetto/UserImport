@@ -227,8 +227,8 @@ class ImportHandler {
 
         // Main import loop
         $importCount = 0;
-        foreach ($newUsers as $row => $newUser) {
-            if ($this->_saveUser($row, $newUser, $groups, $role, $autoUsername, $setImportmarker)) {
+        foreach ($newUsers as $rowNumber => $newUser) {
+            if ($this->_saveUser($rowNumber, $newUser, $groups, $role, $autoUsername, $setImportmarker)) {
                 $importCount++;
             }
         }
@@ -351,6 +351,7 @@ class ImportHandler {
      * Save a new user + profile.
      * 
      * @access private
+     * @param int $rowNumber The row counter
      * @param array $fieldvalues The field values for the new MODX user ($fieldvalues[0] = email, $fieldvalues[1] = fullname)
      * @param array $groups The MODX User Group IDs for the new MODX user
      * @param int $role The MODX User Role ID for the new MODX user
@@ -358,25 +359,25 @@ class ImportHandler {
      * @param bool $setImportmarker Write import-markers to extended fields??
      * @return boolean
      */
-    private function _saveUser($row, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker) {
+    private function _saveUser($rowNumber, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker) {
         // (array key 0 = row number 1)
-        $row = $row + 1;
+        $rowNumber = $rowNumber + 1;
 
         // email -> required!
         if (empty($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_email'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_email'));
             return false;
         }
         if (!$this->validEmail($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_email_invalid').$fieldvalues['email']);
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_invalid').$fieldvalues['email']);
             return false;
         }
         if ($this->emailExists($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_email_ae').$fieldvalues['email']);
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_ae').$fieldvalues['email']);
             return false;
         }
         if (strlen($fieldvalues['email']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_email_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_max_len'));
             return false;
         }
 
@@ -385,33 +386,33 @@ class ImportHandler {
             $fieldvalues['username'] = $fieldvalues['email'];
         }
         if (empty($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_username'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_username'));
             return false;
         }
         if ($this->usernameExists($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_ae').$fieldvalues['username']);
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_username_ae').$fieldvalues['username']);
             return false;
         }
         if (strlen($fieldvalues['username']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_username_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_username_max_len'));
             return false;
         }
 
         // fullname
         if (!empty($fieldvalues['fullname']) && strlen($fieldvalues['fullname']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fullname_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_fullname_max_len'));
             return false;
         }
 
         // phone
         if (!empty($fieldvalues['phone']) && strlen($fieldvalues['phone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
             return false;
         }
 
         // mobilephone
         if (!empty($fieldvalues['mobilephone']) && strlen($fieldvalues['mobilephone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
             return false;
         }
 
@@ -421,7 +422,7 @@ class ImportHandler {
             // any valid php date format
             // -> but always saved and handled as UNIX timestamp!
             if (!$this->validTimestamp($fieldvalues['dob']) && !$this->validDate($fieldvalues['dob'])) {
-        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_dob_invalid').$fieldvalues['dob']);
+        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_dob_invalid').$fieldvalues['dob']);
                 return false;
             }
             // if date format convert to timestamp
@@ -432,61 +433,61 @@ class ImportHandler {
         
         // gender -> needs check!
         if (!empty($fieldvalues['gender']) && !$this->validGender($fieldvalues['gender'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_gender_invalid').$fieldvalues['gender']);
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_gender_invalid').$fieldvalues['gender']);
             return false;
         }
 
         // address
         if (!empty($fieldvalues['address']) && strlen($fieldvalues['address']) > 65535) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_address_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_address_max_len'));
             return false;
         }
 
         // country
         if (!empty($fieldvalues['country']) && strlen($fieldvalues['country']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_country_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_country_max_len'));
             return false;
         }
 
         // city
         if (!empty($fieldvalues['city']) && strlen($fieldvalues['city']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_city_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_city_max_len'));
             return false;
         }
 
         // state
         if (!empty($fieldvalues['state']) && strlen($fieldvalues['state']) > 25) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_state_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_state_max_len'));
             return false;
         }
 
         // zip
         if (!empty($fieldvalues['zip']) && strlen($fieldvalues['zip']) > 25) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_zip_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_zip_max_len'));
             return false;
         }
 
         // fax
         if (!empty($fieldvalues['fax']) && strlen($fieldvalues['fax']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_fax_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_fax_max_len'));
             return false;
         }
 
         // photo
         if (!empty($fieldvalues['photo']) && strlen($fieldvalues['photo']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_photo_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_photo_max_len'));
             return false;
         }
 
         // comment
         if (!empty($fieldvalues['comment']) && strlen($fieldvalues['comment']) > 65535) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_comment_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_comment_max_len'));
             return false;
         }
 
         // website
         if (!empty($fieldvalues['website']) && strlen($fieldvalues['website']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_website_max_len'));
+    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_website_max_len'));
             return false;
         }
 
@@ -497,7 +498,7 @@ class ImportHandler {
             $extendedArray = $this->jsonToArray($fieldvalues['extended']);
             // Check if conversion was successfull
             if (!is_array($extendedArray)) {
-        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_extended_invalid_json').$fieldvalues['extended']);
+        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_extended_invalid_json').$fieldvalues['extended']);
                 return false;
             }
             $fieldvalues['extended'] = $extendedArray;
@@ -509,7 +510,7 @@ class ImportHandler {
         $user = $this->modx->newObject('modUser');
         
         // Use provided password or auto-generate one
-        $password = $this->_setPassword($user, $fieldvalues, $row);
+        $password = $this->_setPassword($user, $fieldvalues, $rowNumber);
         
         // Add modUser -> required fields
         $user->set('username', $fieldvalues['username']);
@@ -559,9 +560,9 @@ class ImportHandler {
 		if (!$userSaved) {
             // Rollback if one of the savings failed!
             $user->remove();
-            $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_err_user_failed').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
+            $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_user_failed').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
 		} else {
-    		$this->modx->log(modX::LOG_LEVEL_INFO, '-> '.$this->modx->lexicon('userimport.import_users_row').$row.' '.$this->modx->lexicon('userimport.import_users_log_imported_user').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
+    		$this->modx->log(modX::LOG_LEVEL_INFO, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_imported_user').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
 		}
 		return $userSaved;
     }
@@ -572,12 +573,12 @@ class ImportHandler {
      * @access private
      * @param modUser $user
      * @param array $fieldvalues
-     * @param int $row
+     * @param int $rowNumber
      * @return bool|string
      */
-    private function _setPassword(modUser &$user, $fieldvalues, $row) {
+    private function _setPassword(modUser &$user, $fieldvalues, $rowNumber) {
         $generatedPasswordLength = (integer)$this->modx->getOption('password_generated_length', null, 8);
-        if (!empty($fieldvalues['password']) && ($providedPassword = $this->_validateProvidedPassword($fieldvalues['password'], $row))) {
+        if (!empty($fieldvalues['password']) && ($providedPassword = $this->_validateProvidedPassword($fieldvalues['password'], $rowNumber))) {
             $password = $providedPassword;
         } else {
             $password = $user->generatePassword($generatedPasswordLength);
@@ -590,10 +591,10 @@ class ImportHandler {
      *
      * @access private
      * @param $password
-     * @param $row
+     * @param $rowNumber
      * @return bool|string Returns false if not valid
      */
-    private function _validateProvidedPassword($password, $row) {
+    private function _validateProvidedPassword($password, $rowNumber) {
         $minPasswordLength = (integer)$this->modx->getOption('password_min_length', null, 8);
         if (strlen($password) < $minPasswordLength) {
             $this->modx->log(modX::LOG_LEVEL_INFO, '&nbsp;&nbsp;&nbsp;*)'.$this->modx->lexicon('userimport.import_users_log_password_autogenerated').' '.$this->modx->lexicon('userimport.import_users_log_password_len').$minPasswordLength);
