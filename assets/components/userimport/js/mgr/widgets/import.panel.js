@@ -129,6 +129,15 @@ UserImport.panel.Import = function(config) {
                             ,description: _('userimport.import_users_set_importmarker_desc')
                             ,checked: true
                             ,inputValue: 1
+                        },{
+                            xtype: 'xcheckbox'
+                            ,id: 'userimport-notify-users'
+                            ,name: 'notifyusers'
+                            ,hideLabel: true
+                            ,boxLabel: _('userimport.import_users_notify_users')
+                            ,description: _('userimport.import_users_notify_users_desc')
+                            ,checked: false
+                            ,inputValue: 1
                         }]
                     },{
                         xtype: 'fieldset'

@@ -55,6 +55,8 @@ $_lang['userimport.import_users_email_as_username']             = 'Définir l\'a
 $_lang['userimport.import_users_email_as_username_desc']        = 'Si activé, l\'identifiant sera généré à partir de l\'adresse email.';
 $_lang['userimport.import_users_set_importmarker']              = 'Create import-markers';
 $_lang['userimport.import_users_set_importmarker_desc']         = 'If activated, import-markers are saved as extended fields (Date, Key) for each imported user.';
+$_lang['userimport.import_users_notify_users']                  = 'Notify users';
+$_lang['userimport.import_users_notify_users_desc']             = 'If activated, all new imported users will receive an email with their personal user credentials.';
 
 $_lang['userimport.import_users_button_start']                  = 'Démarrer import';
 $_lang['userimport.import_users_status']                        = 'Statut';
