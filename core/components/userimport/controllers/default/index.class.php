@@ -70,6 +70,7 @@ class UserImportIndexManagerController extends modExtraManagerController {
         
         // load widgets
         $this->addJavascript($this->userimport->config['jsUrl'].'mgr/widgets/import.panel.js');
+        $this->addJavascript($this->userimport->config['jsUrl'].'mgr/widgets/notificationtemplate.panel.js');
         $this->addJavascript($this->userimport->config['jsUrl'].'mgr/widgets/about.panel.js');
         
         // load import panel widgets container
