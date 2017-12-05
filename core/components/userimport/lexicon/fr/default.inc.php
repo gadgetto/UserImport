@@ -29,10 +29,23 @@
 $_lang['userimport']                                            = 'User Import';
 $_lang['userimport.desc']                                       = 'Importer des utilisateurs dans la base de données utilisateur MODX';
 $_lang['userimport.cmp_title']                                  = 'User Import';
+$_lang['userimport.settings_save_button']                       = 'Sauvegarder les Paramètres';
+$_lang['userimport.msg_loading_defaults']                       = 'Loading default settings...';
+$_lang['userimport.msg_loading_defaults_failed']                = 'Loading default settings failed';
+$_lang['userimport.msg_saving_defaults']                        = 'Saving default settings...';
+$_lang['userimport.msg_saving_defaults_successfull']            = 'Default settings saved';
+$_lang['userimport.msg_saving_defaults_failed']                 = 'Saving default settings failed';
 
 $_lang['userimport.about_tab']                                  = 'A propos';
 $_lang['userimport.about_credits']                              = 'Crédits';
 $_lang['userimport.about_credits_modx_community']               = 'Un grand merci à la communauté MODX pour leur aide';
+
+$_lang['userimport.notification_template_tab']                  = 'Notification Template';
+$_lang['userimport.notification_template_tab_desc']             = 'If activated (User Tab -> Import Options -> Notify users), all new imported users will receive a notification email. You can setup the template for the notification here.';
+$_lang['userimport.notification_template_mail_subject']         = 'Mail Subject';
+$_lang['userimport.notification_template_mail_subject_desc']    = 'Enter the subject for the email notification here.';
+$_lang['userimport.notification_template_mail_body']            = 'Mail Body';
+$_lang['userimport.notification_template_mail_body_desc']       = 'Enter the body for the email notification here.';
 
 $_lang['userimport.import_users_tab']                           = 'Utilisateurs';
 $_lang['userimport.import_users_tab_desc']                      = 'Importer des utilisateurs dans la base de donnée MODX. Attributer leur automatiquement un rôle et un groupe d\'utilisateur. Pour informations sur le format du fichier CSV, veuillez cliquer sur le bouton d\'<strong>aide !</strong>';
@@ -56,7 +69,7 @@ $_lang['userimport.import_users_email_as_username_desc']        = 'Si activé, l
 $_lang['userimport.import_users_set_importmarker']              = 'Create import-markers';
 $_lang['userimport.import_users_set_importmarker_desc']         = 'If activated, import-markers are saved as extended fields (Date, Key) for each imported user.';
 $_lang['userimport.import_users_notify_users']                  = 'Notify users';
-$_lang['userimport.import_users_notify_users_desc']             = 'If activated, all new imported users will receive an email with their personal user credentials.';
+$_lang['userimport.import_users_notify_users_desc']             = 'If activated, all new imported users will receive a notification email.';
 
 $_lang['userimport.import_users_button_start']                  = 'Démarrer import';
 $_lang['userimport.import_users_status']                        = 'Statut';
