@@ -29,6 +29,8 @@ UserImport.IndexPanel = function(config) {
             ,items: [{
                 xtype: 'userimport-panel-import'
             },{
+                xtype: 'userimport-panel-notification-template'
+            },{
                 xtype: 'userimport-panel-about'
             }]
         }]
@@ -46,6 +48,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,items: this.getButtons()
         });                                
         this.actionToolbar.doLayout();
+        this.getSettings();
     }
     ,startUserImport: function(){
         Ext.MessageBox.show({
@@ -120,6 +123,12 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,scope: this
         },'-');
         buttons.push({
+            text: '<i class="icon icon-check-circle icon-lg"></i>&nbsp;' + _('userimport.settings_save_button')
+            ,id: 'button-settings-save'
+            ,handler: this.updateSettings
+            ,scope: this
+        },'-')
+        buttons.push({
             text: _('help_ex')
             ,id: 'button-help'
             ,handler: function(){
@@ -129,6 +138,45 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,scope: this
         });
         return buttons;
+    }
+    ,getSettings: function(){
+        this.getForm().load({
+            url: UserImport.config.connectorUrl
+            ,params: {
+                action: 'mgr/settings/get'
+            }
+            ,waitMsg: _('userimport.msg_loading_defaults')
+            ,success: function(){
+                //console.info(data);
+            }
+            ,failure: function(results,request){
+                Ext.MessageBox.alert(_('userimport.msg_loading_defaults_failed'),result.responseText);
+            }
+            ,scope: this
+        });
+    }
+    ,updateSettings: function(){
+        this.getForm().submit({
+            url: UserImport.config.connectorUrl
+            ,params: {
+                action: 'mgr/settings/update'
+            }
+            ,waitMsg: _('userimport.msg_saving_defaults')
+            ,success: function(form,action){
+                if(action.result.success){
+                    // show success status message
+                    MODx.msg.status({
+                        title: _('save_successful')
+                        ,message: _('userimport.msg_saving_defaults_successfull')
+                        ,delay: 3
+                    });
+                }
+            }
+            ,failure: function(result,request) {
+                Ext.MessageBox.alert(_('userimport.msg_saving_defaults_failed'),result.responseText);
+            }
+            ,scope: this
+        });
     }
 });
 Ext.reg('userimport-panel-index',UserImport.IndexPanel);
