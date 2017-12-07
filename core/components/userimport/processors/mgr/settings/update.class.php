@@ -59,6 +59,10 @@ class SettingsUpdateProcessor extends modProcessor {
         $response['success'] = true;
         $response['data'] = $this->getProperties();
         
+        // Fix/workaround for: Uncaught SyntaxError: Invalid regular expression: missing /
+        // -> remove fields which could contain <tag></tag>
+        unset ($response['data']['mailsubject'], $response['data']['mailbody']);
+        
         return $this->modx->toJSON($response);
     }
 
