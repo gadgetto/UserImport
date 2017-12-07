@@ -75,16 +75,33 @@ $settings['userimport.notifyusers']->fromArray(array(
 $settings['userimport.mailsubject'] = $modx->newObject('modSystemSetting');
 $settings['userimport.mailsubject']->fromArray(array(
     'key'       => 'userimport.mailsubject',
-    'value'     => '',
+    'value'     => 'Notification: Your New User Account!',
     'xtype'     => 'textfield',
     'namespace' => 'userimport',
     'area'      => '',
 ), '', true, true);
 
+$mailbody = <<<EOT
+Hello,<br>
+<br>
+we\'d like to inform you, that your user credentials were imported into our system and a new user account was created for you!<br> 
+<br>
+<strong>Here are your new account credentials:</strong><br>
+<br>
+Name: [[+fullname]]<br>
+Email: [[+email]]<br>
+Your username: [[+username]]<br>
+Your password: [[+password]]<br>
+<br>
+If you have any questions please don\'t hesitate to contact us!<br>
+<br>
+Your [[++site_name]] team
+EOT;
+
 $settings['userimport.mailbody'] = $modx->newObject('modSystemSetting');
 $settings['userimport.mailbody']->fromArray(array(
     'key'       => 'userimport.mailbody',
-    'value'     => '',
+    'value'     => $mailbody,
     'xtype'     => 'textarea',
     'namespace' => 'userimport',
     'area'      => '',
