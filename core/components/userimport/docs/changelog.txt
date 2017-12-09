@@ -1,5 +1,13 @@
 Changelog for UserImport
 
+UserImport 1.1.0-pl (2017-12-07)
+--------------------------------------------------
+- [#5] added feature to notify new imported users via email
+- added feature to save import params as presets (system settings)
+- added pre check for correct delimiter characters
+- added pre check for correct enclosure characters
+
+
 UserImport 1.0.0-pl (2016-02-24)
 --------------------------------------------------
 - added sanity check for for equal fields - values count in CSV data
