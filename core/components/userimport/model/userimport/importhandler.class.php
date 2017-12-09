@@ -139,13 +139,83 @@ class ImportHandler {
             return false;
         }
         $this->delimiter   = $delimiter;
-        $this->enclosure   = $enclosure; 
-        $this->escape      = $escape; 
-        $this->lineLength  = $lineLength; 
-        $this->hasHeader   = $hasHeader; 
+        $this->enclosure   = $enclosure;
+        $this->escape      = $escape;
+        $this->lineLength  = $lineLength;
+        $this->hasHeader   = $hasHeader;
+        
+        // Delimiter check
+        $detectDelimiter = $this->_detectDelimiter();
+        if ($detectDelimiter == 'mixed') {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, $this->modx->lexicon('userimport.import_users_log_delimiter_not_detected'));
+        } elseif ($this->delimiter !== $detectDelimiter) {
+    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_wrong_delimiter_detected').$detectDelimiter);
+            return false;
+        }
+        
+        // Enclosure check
+        $detectEnclosure = $this->_detectEnclosure();
+        if ($detectEnclosure == 'mixed') {
+    		$this->modx->log(modX::LOG_LEVEL_WARN, $this->modx->lexicon('userimport.import_users_log_enclosure_not_detected'));
+        } elseif ($this->enclosure !== $detectEnclosure) {
+    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_wrong_enclosure_detected').$detectEnclosure);
+            return false;
+        }
+        
         return true;
     }
 
+    /**
+     * Try to detect the delimiter character of CSV file, by reading the first row.
+     *
+     * @access private
+     * @return string $delimiter || false
+     */
+    private function _detectDelimiter() {
+        $delimiter = false;
+        $line = '';
+        $line = fgets($this->fileHandle); // Read until first newline
+
+        // Delimiter = ;
+        if (strpos($line, ';') !== false && strpos($line, ',') === false) {
+            $delimiter = ';';
+        // Delimiter = ,
+        } elseif (strpos($line, ',') !== false && strpos($line, ';') === false) {
+            $delimiter = ',';
+        // Delimiter not detected uniquely (could happen if line holds ; and , characters)
+        } else {
+            $delimiter = 'mixed';
+        }
+        rewind($this->fileHandle); // Rewind the position of file pointer
+        
+        return $delimiter;
+    }
+
+    /**
+     * Try to detect the enclosure character of CSV file, by reading the first row.
+     *
+     * @access private
+     * @return string $enclosure || false
+     */
+    private function _detectEnclosure() {
+        $enclosure = false;
+        $line = '';
+        $line = fgets($this->fileHandle); // Read until first newline
+
+        // Enclosure = "
+        if (strpos($line, '"') !== false && strpos($line, "'") === false) {
+            $enclosure = '"';
+        // Enclosure = '
+        } elseif (strpos($line, "'") !== false && strpos($line, '"') === false) {
+            $enclosure = "'";
+        // Enclosure not detected uniquely (could happen if line holds " and ' characters)
+        } else {
+            $enclosure = 'mixed';
+        }
+        rewind($this->fileHandle); // Rewind the position of file pointer
+        
+        return $enclosure;
+    }
 
     /**
      * Getter for the unique import key.
