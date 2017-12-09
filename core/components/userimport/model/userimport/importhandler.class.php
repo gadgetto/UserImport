@@ -279,9 +279,12 @@ class ImportHandler {
      * @param int $role A MODX User Role id
      * @param bool $autoUsername Automatically use email address as username?
      * @param bool $setImportmarker Write import-markers to extended fields?
+     * @param bool $notifyUsers Notify imported users via email?
+     * @param string $mailSubject The subject of the notification mail
+     * @param string $mailBody The body of the notification mail
      * @return mixed int $importCount || false
      */
-    public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false, $setImportmarker = true) {
+    public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false, $setImportmarker = true, $notifyUsers = false, $mailSubject = '', $mailBody = '') {
         $this->batchSize = $batchSize;
 
         if ($this->hasHeader) {
@@ -298,7 +301,7 @@ class ImportHandler {
         // Main import loop
         $importCount = 0;
         foreach ($newUsers as $rowNumber => $newUser) {
-            if ($this->_saveUser($rowNumber, $newUser, $groups, $role, $autoUsername, $setImportmarker)) {
+            if ($this->_saveUser($rowNumber, $newUser, $groups, $role, $autoUsername, $setImportmarker, $notifyUsers, $mailSubject, $mailBody)) {
                 $importCount++;
             }
         }
@@ -427,9 +430,12 @@ class ImportHandler {
      * @param int $role The MODX User Role ID for the new MODX user
      * @param bool $autoUsername Automatically use email address as username?
      * @param bool $setImportmarker Write import-markers to extended fields?
+     * @param bool $notifyUsers Notify imported users via email?
+     * @param string $mailSubject The subject of the notification mail
+     * @param string $mailBody The body of the notification mail
      * @return boolean
      */
-    private function _saveUser($rowNumber, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker) {
+    private function _saveUser($rowNumber, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker, $notifyUsers, $mailSubject, $mailBody) {
         // (array key 0 = row number 1)
         $rowNumber = $rowNumber + 1;
 
@@ -633,6 +639,16 @@ class ImportHandler {
             $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_user_failed').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
 		} else {
     		$this->modx->log(modX::LOG_LEVEL_INFO, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_imported_user').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
+    		// Send a notification email if enabled
+    		if ($notifyUsers) {
+        		// Returns an array (sent, error_info)
+                $notificationStatus = $this->sendNotificationEmail($user, $userProfile, $password, $mailSubject, $mailBody);
+                if ($notificationStatus['sent'] == true) {
+                    $this->modx->log(modX::LOG_LEVEL_INFO, '&nbsp;&nbsp;&nbsp;Notification mail sent.');
+                } else {
+                    $this->modx->log(modX::LOG_LEVEL_ERROR, '&nbsp;&nbsp;&nbsp;Could not send notification mail: '.$notificationStatus['erro_info']);
+                }
+    		}
 		}
 		return $userSaved;
     }
@@ -731,7 +747,7 @@ class ImportHandler {
         }
         return false;
     }
-    
+
     /**
      * Checks if we have a valid email address.
      *
@@ -838,5 +854,105 @@ class ImportHandler {
      */
     public function jsonToArray($json) {
         return json_decode($json, true);
+    }
+
+    /**
+     * Send a notification email to the imported user based on the specified information and templates.
+     *
+     * @access public
+     * @param modUser $user The user object
+     * @param modUserProfile $profile The user profile object
+     * @param string $password The users password (cleartext!)
+     * @param string $mailSubject The subject of the notification mail
+     * @param string $mailBody The body of the notification mail
+     * @return boolean
+     */
+    public function sendNotificationEmail($user, $profile, $password, $mailSubject, $mailBody) {
+
+        // Set confirmation email properties
+                
+        // Flatten extended fields:
+        // extended.field1
+        // extended.container1.field2
+        // ...
+        $extended = $profile->get('extended') ? $profile->get('extended') : array();
+        if (!empty($extended)) {
+            $extended = $this->_flattenExtended($extended, 'extended.');
+        }
+        $emailProperties = array_merge(
+            $profile->toArray(),
+            $user->toArray(),
+            $extended
+        );
+        $emailProperties = $this->_cleanupKeys($emailProperties);
+        
+        // Now re-add the password field with password in cleartext (so it will be available as placeholder)
+        $emailProperties['password'] = $password;
+
+        // Parse mailbody and process MODX user/profile placeholders
+        $chunk = $this->modx->newObject('modChunk');
+        $chunk->setCacheable(false);
+        $output = $chunk->process($emailProperties, $mailBody);
+        $emailProperties['mailbody'] = $output;
+        $emailProperties['mailsubject'] = $mailSubject;
+
+        // Send email!
+        $this->modx->getService('mail', 'mail.modPHPMailer');
+        $this->modx->mail->set(modMail::MAIL_FROM, $this->modx->getOption('emailsender'));
+        $this->modx->mail->set(modMail::MAIL_FROM_NAME, $this->modx->getOption('site_name'));
+        $this->modx->mail->set(modMail::MAIL_SENDER, $this->modx->getOption('emailsender'));
+        $this->modx->mail->set(modMail::MAIL_SUBJECT, $emailProperties['mailsubject']);
+        $this->modx->mail->set(modMail::MAIL_BODY, $emailProperties['mailbody']);
+        $this->modx->mail->address('to', $emailProperties['email'], $emailProperties['email']);
+        $this->modx->mail->address('reply-to', $this->modx->getOption('emailsender'));
+        $this->modx->mail->setHTML(true);
+                
+        $sent = $this->modx->mail->send();
+        $this->modx->mail->reset();
+        
+        $sendStatus = array();
+        $sendStatus['sent'] = $sent;
+        $sendStatus['erro_info'] = $this->modx->mail->mailer->ErrorInfo;
+
+        return $sendStatus;
+    }
+
+    /**
+     * Manipulate/add/remove fields from array.
+     *
+     * @access private
+     * @param array $properties
+     * @return array $properties
+     */
+    private function _cleanupKeys(array $properties = array()) {
+        unset(
+            $properties['password'],    // security!
+            $properties['cachepwd'],    // security!
+            $properties['salt'],        // security!
+            $properties['internalKey'], // not needed (id of profile is overwritten by id of user table)
+            $properties['sessionid'],   // security!
+            $properties['extended']     // not needed as its already flattened
+        );    
+        return $properties;
+    }
+
+    /**
+     * Helper function to recursively flatten an array.
+     * 
+     * @access private
+     * @param array $array The array to be flattened.
+     * @param string $prefix The prefix for each new array key.
+     * @return array $result The flattened and prefixed array.
+     */
+    private function _flattenExtended($array, $prefix = '') {
+        $result = array();
+        foreach($array as $key => $value) {
+            if (is_array($value)) {
+                $result = $result + $this->_flattenExtended($value, $prefix.$key.'.');
+            } else {
+                $result[$prefix.$key] = $value;
+            }
+        }
+        return $result;
     }
 }

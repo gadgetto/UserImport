@@ -107,6 +107,25 @@ class UserImportProcessor extends modProcessor {
         // Get setImportmarker setting (write import-markers to extended fields?)
         $setImportmarker = $this->getProperty('setimportmarker') ? true : false;
 
+        // Get notifyUsers setting (notify imported users via email?)
+        $notifyUsers = $this->getProperty('notifyusers') ? true : false;
+
+        // Get mailSubject setting
+        $mailSubject = $this->getProperty('mailsubject');
+        if ($notifyUsers && empty($mailSubject)) {
+            $this->addFieldError('mailsubject', $this->modx->lexicon('userimport.import_users_log_ns_mailsubject'));
+            $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_ns_mailsubject'));
+            sleep(1);
+        }
+
+        // Get mailBody setting
+        $mailBody = $this->getProperty('mailbody');
+        if ($notifyUsers && empty($mailBody)) {
+            $this->addFieldError('mailbody', $this->modx->lexicon('userimport.import_users_log_ns_mailbody'));
+            $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_ns_mailbody'));
+            sleep(1);
+        }
+
         // Get selected MODX user group(s)
         $usergroups = $this->getProperty('usergroups');
         $groups = array();
@@ -160,7 +179,7 @@ class UserImportProcessor extends modProcessor {
             return $this->failure();
         }
         
-        $result = $this->importhandler->importUsers($batchsize, $groups, $role, $autoUsername, $setImportmarker);
+        $result = $this->importhandler->importUsers($batchsize, $groups, $role, $autoUsername, $setImportmarker, $notifyUsers, $mailSubject, $mailBody);
 
 
         $this->modx->log(modX::LOG_LEVEL_INFO, $this->modx->lexicon('userimport.import_users_log_finished').$result);
