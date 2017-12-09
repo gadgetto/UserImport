@@ -278,7 +278,7 @@ class ImportHandler {
      * @param array $groups Array of MODX User Group ids
      * @param int $role A MODX User Role id
      * @param bool $autoUsername Automatically use email address as username?
-     * @param bool $setImportmarker Write import-markers to extended fields??
+     * @param bool $setImportmarker Write import-markers to extended fields?
      * @return mixed int $importCount || false
      */
     public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false, $setImportmarker = true) {
