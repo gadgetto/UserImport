@@ -147,7 +147,7 @@ class UserImportProcessor extends modProcessor {
 
         // Initialize the ImportHandler object
         if ($this->importhandler->init($file['tmp_name'], $hasHeader, $delimiter, $enclosure) == false) {
-            $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_err_open_file'));
+            $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_err_open_file'));
             sleep(1);
             $error = true;
         }
