@@ -27,7 +27,7 @@
 class UserImport {
 
     const VERSION = '1.1.0';
-    const RELEASE = 'rc1';
+    const RELEASE = 'pl';
 
     /** @var modX A reference to the modX object */
     public $modx = null;
