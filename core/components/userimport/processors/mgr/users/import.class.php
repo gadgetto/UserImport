@@ -151,7 +151,7 @@ class UserImportProcessor extends modProcessor {
         // Get MODX user role
         $role = $this->getProperty('role');
 
-        // Only continue with processing if no errors occured
+        // Only continue with processing if no errors occurred
         if ($error || $this->hasErrors()) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_failed'));
             sleep(2);
@@ -171,7 +171,7 @@ class UserImportProcessor extends modProcessor {
             $error = true;
         }
         
-        // Only continue with processing if no errors occured
+        // Only continue with processing if no errors occurred
         if ($error) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_failed'));
             sleep(2);
