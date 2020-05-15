@@ -131,7 +131,7 @@ class UserImportProcessor extends modProcessor {
         $groups = array();
         if (!empty($usergroups)) {
             // extract group IDs
-            // (e.g. n_ug_5,n_ug_6,n_ug_7 )
+            // (e.g. n_ug_5,n_ug_6,n_ug_7)
             // $nodeparts[0] = 'n'
             // $nodeparts[1] = 'ug'
             // $nodeparts[2] = grpID
