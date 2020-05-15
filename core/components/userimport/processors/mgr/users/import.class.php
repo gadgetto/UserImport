@@ -146,8 +146,7 @@ class UserImportProcessor extends modProcessor {
                 }
             }
         }
-        //$this->modx->log(modX::LOG_LEVEL_INFO, print_r($groups,true));
-
+        
         // Get MODX user role
         $role = $this->getProperty('role');
 
