@@ -97,6 +97,7 @@ $_lang['userimport.import_users_log_err_dob_invalid']           = 'Non importé.
 $_lang['userimport.import_users_log_err_gender_invalid']        = 'Non importé. Genre invalide : ';
 $_lang['userimport.import_users_log_err_extended_invalid_json'] = 'Not imported. Invalid extended fields json string: ';
 $_lang['userimport.import_users_log_ns_file']                   = 'Sélectionner un fichier CSV.';
+$_lang['userimport.import_users_log_file_upload_failed']        = 'Le téléchargement du fichier CSV a échoué.';
 $_lang['userimport.import_users_log_wrong_filetype']            = 'Seul les fichiers CSV sont acceptés.';
 $_lang['userimport.import_users_log_wrong_delimiter_detected']  = 'The CSV file seems to contain wrong field delimiter characters. Detected was: ';
 $_lang['userimport.import_users_log_delimiter_not_detected']    = 'Could not detect unique field delimiter characters.';

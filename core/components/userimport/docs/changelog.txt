@@ -1,5 +1,10 @@
 Changelog for UserImport
 
+Unreleased
+--------------------------------------------------
+- Added new checks for import file
+
+
 UserImport 1.1.0-pl (2017-12-07)
 --------------------------------------------------
 - [#5] added feature to notify new imported users via email
