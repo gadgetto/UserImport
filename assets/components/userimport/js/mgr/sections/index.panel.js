@@ -19,9 +19,8 @@ UserImport.IndexPanel = function(config) {
         ,unstyled: true
         ,fileUpload: true
         ,items: [{
-            html: '<h2>'+_('userimport.cmp_title')+'</h2>'
-            ,border: false
-            ,cls: 'modx-page-header'
+            html: _('userimport.cmp_title')
+            ,xtype: 'modx-header'
         },{
             xtype: 'modx-tabs'
             ,itemId: 'tabs'
