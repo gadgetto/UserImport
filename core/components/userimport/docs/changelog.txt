@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added new checks for import file
 
+### Fixed
+- [#12] Fixed deprecated usage of ereg() in validEmail method
+
 ## [1.1.0-pl] - 2017-12-07
 ### Added
 - [#5] Added feature to notify new imported users via email
