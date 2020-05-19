@@ -13,7 +13,8 @@ data to prevent inconsistent user objects.
 
 Reqirements:
 
-- MODx 2.3 and above
+- MODX 2.3 and above
+- PHP 5.6 and above
 
 User guide:
 
