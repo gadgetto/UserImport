@@ -1,22 +1,18 @@
 <?php
+
 /**
- * UserImport
+ * This file is part of the UserImport package.
  *
- * Copyright 2014 by bitego <office@bitego.com>
+ * @copyright bitego (Martin Gartner)
+ * @license GNU General Public License v2.0 (and later)
  *
- * UserImport is free software; you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
- * version.
- *
- * UserImport is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this software; if not, write to the Free Software Foundation, Inc., 59 Temple
- * Place, Suite 330, Boston, MA 02111-1307 USA
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+namespace Bitego\UserImport;
+
+use MODX\Revolution\modX;
 
 /**
  * UserImport main class
@@ -24,44 +20,77 @@
  * @package userimport
  */
 
-class UserImport {
+class UserImport
+{
+    public const NAME     = 'UserImport';
+    public const VERSION  = '2.0.0';
+    public const RELEASE  = 'alpha1';
 
-    const VERSION = '1.1.1';
-    const RELEASE = 'pl';
+    public const HELP_URL = 'https://docs.bitego.com/user-import/user-guide/';
+    public const DEV_NAME = 'bitego (Martin Gartner, Franz Gallei)';
+    public const DEV_URL  = 'http://www.bitego.com';
 
-    /** @var modX A reference to the modX object */
+    public const MIN_PHP_VERSION = '7.2.5';
+    public const MIN_MODX_VERSION = '3.0.0';
+    public const MAX_MODX_VERSION = '';
+
+    /** @var \MODX\Revolution\modX A reference to the modX object */
     public $modx = null;
-    
+
     /** @var array $config UserImport config array */
-    public $config = array();
-    
+    public $config = [];
+
+    /** @var boolean $debug Debug mode on/off */
+    public $debug = false;
+
     /**
      * Constructor for UserImport object
      *
-     * @param modX &$modx A reference to the modX object
+     * @param \MODX\Revolution\modX &$modx A reference to the modX object
      * @param array $config An array of configuration options
      */
-    function __construct(modX &$modx, array $config = array()) {
+    public function __construct(modX &$modx, array $config = [])
+    {
         $this->modx = &$modx;
- 
-        $corePath = $this->modx->getOption('userimport.core_path', $config, $this->modx->getOption('core_path').'components/userimport/');
-        $assetsUrl = $this->modx->getOption('userimport.assets_url', $config, $this->modx->getOption('assets_url').'components/userimport/');
 
-        $this->config = array_merge(array(
+        $corePath = $this->modx->getOption(
+            'userimport.core_path',
+            $config,
+            $this->modx->getOption('core_path', null, MODX_CORE_PATH) . 'components/userimport/'
+        );
+        $assetsPath = $this->modx->getOption(
+            'userimport.assets_path',
+            $config,
+            $this->modx->getOption('assets_path', null, MODX_ASSETS_PATH) . 'components/userimport/'
+        );
+        $assetsUrl = $this->modx->getOption(
+            'userimport.assets_url',
+            $config,
+            $this->modx->getOption('assets_url', null, MODX_ASSETS_URL) . 'components/userimport/'
+        );
+
+        $this->modx->lexicon->load('userimport:default');
+
+        $this->config = array_merge([
             'corePath'         => $corePath,
-            'modelPath'        => $corePath.'model/',
-            'processorsPath'   => $corePath.'processors/',
-            'docsPath'         => $corePath.'docs/',
+            'srcPath'          => $corePath . 'src/',
+            'modelPath'        => $corePath . 'src/Model/',
+            'processorsPath'   => $corePath . 'src/Processors/',
+            'chunksPath'       => $corePath . 'elements/chunks/',
+            'includesPath'     => $corePath . 'includes/',
+            'assetsPath'       => $assetsPath,
             'assetsUrl'        => $assetsUrl,
-            'jsUrl'            => $assetsUrl.'js/',
-            'cssUrl'           => $assetsUrl.'css/',
-            'connectorUrl'     => $assetsUrl.'connector.php',
-            'helpUrl'          => 'http://www.bitego.com/extras/userimport/',
-            'componentName'    => 'UserImport',
+            'jsUrl'            => $assetsUrl . 'js/',
+            'cssUrl'           => $assetsUrl . 'css/',
+            'imgUrl'           => $assetsUrl . 'img/',
+            'connectorUrl'     => $assetsUrl . 'connector.php',
+            'helpUrl'          => self::HELP_URL,
+            'componentName'    => self::NAME,
             'componentVersion' => self::VERSION,
             'componentRelease' => self::RELEASE,
-            'developerName'    => 'bitego (Martin Gartner)',
-            'developerUrl'     => 'http://www.bitego.com',
-        ), $config);
+            'developerName'    => self::DEV_NAME,
+            'developerUrl'     => self::DEV_URL,
+            'debug'            => $this->debug,
+        ], $config);
     }
 }
