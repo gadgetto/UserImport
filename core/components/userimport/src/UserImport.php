@@ -69,7 +69,7 @@ class UserImport
             $this->modx->getOption('assets_url', null, MODX_ASSETS_URL) . 'components/userimport/'
         );
 
-        $this->modx->lexicon->load('userimport:default');
+        $this->modx->lexicon->load('user,userimport:default');
 
         $this->config = array_merge([
             'corePath'         => $corePath,
