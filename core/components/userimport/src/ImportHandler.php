@@ -1,22 +1,22 @@
 <?php
+
 /**
- * UserImport
+ * This file is part of the UserImport package.
  *
- * Copyright 2014 by bitego <office@bitego.com>
+ * @copyright bitego (Martin Gartner)
+ * @license GNU General Public License v2.0 (and later)
  *
- * UserImport is free software; you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
- * version.
- *
- * UserImport is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this software; if not, write to the Free Software Foundation, Inc., 59 Temple
- * Place, Suite 330, Boston, MA 02111-1307 USA
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+namespace Bitego\UserImport;
+
+use MODX\Revolution\modX;
+use MODX\Revolution\modUser;
+use MODX\Revolution\modUserProfile;
+use MODX\Revolution\modChunk;
+use MODX\Revolution\Mail\modMail;
 
 /**
  * ImportHandler class handles batch import of users into MODX users database
@@ -25,43 +25,43 @@
  * @package userimport
  */
 
-class ImportHandler {
-
+class ImportHandler
+{
     /** @var modX $modx A reference to the modX object */
     public $modx = null;
 
     /** @var array $config An array of config values */
-    public $config = array();
-    
+    public $config = [];
+
     /** @var string $importKey A unique string to identify a group of imported users (uik+timestamp) */
-    public $importKey;
-    
+    public $importKey = '';
+
     /** @var resource $fileHandle A valid file pointer to a file successfully opened */
-    public $fileHandle = false;
-    
+    public $fileHandle = null;
+
     /** @var int $lineLength Must be greater than the longest line (in characters) to be found in the CSV file */
-    public $lineLength;
+    public $lineLength = 0;
 
     /** @var string $delimiter The field delimiter (one character only) */
-    public $delimiter;
+    public $delimiter = '';
 
     /** @var string $enclosure The field enclosure character (one character only) */
-    public $enclosure;
+    public $enclosure = '';
 
     /** @var string $escape The escape character (one character only). Defaults to backslash. */
-    public $escape;
+    public $escape = '';
 
     /** @var boolean $hasHeader If the first row includes field names */
-    public $hasHeader;
+    public $hasHeader = '';
 
     /** @var array $header The first row (field names) */
-    public $header = array();
-    
+    public $header = [];
+
     /** @var int $batchSize Number of users to be imported in one batch */
-    public $batchSize;
+    public $batchSize = 0;
 
     /** @var array $userFields The internal MODX user field names (from modUser and modProfile) */
-    public $userFields = array(
+    public $userFields = [
         'email',       // varchar 100
         'username',    // varchar 100
         'password',    // varchar 255
@@ -80,14 +80,10 @@ class ImportHandler {
         'comment',     // text
         'website',     // varchar 255
         'extended',    // text
-    );
-    
+    ];
+
     /** @var array $extendedFields The extended user-field names (modProfile) */
-    public $extendedFields = array();
-
-    /** @var boolean $legacyFgetcsv If fgetcsv() is used under PHP version < 5.3.0 */
-    public $legacyFgetcsv = false;
-
+    public $extendedFields = [];
 
     /**
      * Constructor for ImportHandler object.
@@ -95,36 +91,31 @@ class ImportHandler {
      * @access public
      * @param modX &$modx A reference to the modX object
      */
-    public function __construct(modX &$modx, array $config = array()) {
+    public function __construct(modX &$modx, array $config = [])
+    {
         $this->modx = &$modx;
         $this->modx->lexicon->load('user,userimport:default');
         $this->importKey = uniqid('uik', true);
-        ini_set('auto_detect_line_endings', true);
-        $this->config = array_merge(array(
-            'use_multibyte' => (boolean)$this->modx->getOption('use_multibyte', null, false),
-            'encoding'      => $this->modx->getOption('modx_charset', null, 'UTF-8'),
-        ), $config);
-        
-        // Since PHP 5.3.0 the 'escape' parameter was added to the fgetcsv() function,
-        // using on PHP 5.2 will throw a warning and not return an array.
-        $this->legacyFgetcsv = version_compare(PHP_VERSION, '5.3.0', '<');
+        $this->config = array_merge([
+            'use_multibyte' => (bool)$this->modx->getOption('use_multibyte', null, false),
+            'encoding' => $this->modx->getOption('modx_charset', null, 'UTF-8'),
+        ], $config);
     }
-    
 
     /**
      * Destructor for ImportHandler object.
-     * 
+     *
      * @access public
      * @return void
      */
-    public function __destruct() {
-        $this->_closeFile();
-        ini_set('auto_detect_line_endings', false);
+    public function __destruct()
+    {
+        $this->closeFile();
     }
 
     /**
      * Initialize csv file import.
-     * 
+     *
      * @access public
      * @param string $filePath
      * @param bool $hasHeader (default: true)
@@ -134,44 +125,68 @@ class ImportHandler {
      * @param int $lineLength (default: 4096)
      * @return boolean
      */
-    public function init($filePath, $hasHeader = true, $delimiter = ',', $enclosure = '"', $escape = '\\', $lineLength = 4096) {
-        if ($this->_openFile($filePath) == false) {
+    public function init(
+        string $filePath,
+        bool $hasHeader = true,
+        string $delimiter = ',',
+        string $enclosure = '"',
+        string $escape = '\\',
+        int $lineLength = 4096
+    ) {
+        if ($this->openFile($filePath) == false) {
             return false;
         }
-        $this->delimiter   = $delimiter;
-        $this->enclosure   = $enclosure;
-        $this->escape      = $escape;
-        $this->lineLength  = $lineLength;
-        $this->hasHeader   = $hasHeader;
-        
+
+        $this->delimiter  = $delimiter;
+        $this->enclosure  = $enclosure;
+        $this->escape     = $escape;
+        $this->lineLength = $lineLength;
+        $this->hasHeader  = $hasHeader;
+
+        $initCheck = true;
+
         // Delimiter check
-        $detectDelimiter = $this->_detectDelimiter();
+        $detectDelimiter = $this->detectDelimiter();
         if ($detectDelimiter == 'mixed') {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, $this->modx->lexicon('userimport.import_users_log_delimiter_not_detected'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                $this->modx->lexicon('userimport.import_users_log_delimiter_not_detected')
+            );
+            $initCheck = false;
         } elseif ($this->delimiter !== $detectDelimiter) {
-    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_wrong_delimiter_detected').$detectDelimiter);
-            return false;
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                $this->modx->lexicon('userimport.import_users_log_wrong_delimiter_detected') . $detectDelimiter
+            );
+            $initCheck = false;
         }
-        
+
         // Enclosure check
-        $detectEnclosure = $this->_detectEnclosure();
+        $detectEnclosure = $this->detectEnclosure();
         if ($detectEnclosure == 'mixed') {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, $this->modx->lexicon('userimport.import_users_log_enclosure_not_detected'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                $this->modx->lexicon('userimport.import_users_log_enclosure_not_detected')
+            );
+            $initCheck = false;
         } elseif ($this->enclosure !== $detectEnclosure) {
-    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_wrong_enclosure_detected').$detectEnclosure);
-            return false;
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                $this->modx->lexicon('userimport.import_users_log_wrong_enclosure_detected') . $detectEnclosure
+            );
+            $initCheck = false;
         }
-        
-        return true;
+        return $initCheck;
     }
 
     /**
      * Try to detect the delimiter character of CSV file, by reading the first row.
      *
      * @access private
-     * @return string $delimiter || false
+     * @return mixed $delimiter | false
      */
-    private function _detectDelimiter() {
+    private function detectDelimiter()
+    {
         $delimiter = false;
         $line = '';
         $line = fgets($this->fileHandle); // Read until first newline
@@ -187,7 +202,7 @@ class ImportHandler {
             $delimiter = 'mixed';
         }
         rewind($this->fileHandle); // Rewind the position of file pointer
-        
+
         return $delimiter;
     }
 
@@ -195,9 +210,10 @@ class ImportHandler {
      * Try to detect the enclosure character of CSV file, by reading the first row.
      *
      * @access private
-     * @return string $enclosure || false
+     * @return mixed $enclosure | false
      */
-    private function _detectEnclosure() {
+    private function detectEnclosure()
+    {
         $enclosure = false;
         $line = '';
         $line = fgets($this->fileHandle); // Read until first newline
@@ -213,66 +229,78 @@ class ImportHandler {
             $enclosure = 'mixed';
         }
         rewind($this->fileHandle); // Rewind the position of file pointer
-        
+
         return $enclosure;
     }
 
     /**
      * Getter for the unique import key.
-     * 
+     *
      * @access public
      * @return string The unique import key
      */
-    public function getImportKey() {
+    public function getImportKey()
+    {
         return $this->importKey;
     }
 
     /**
      * Open a file.
-     * 
+     *
      * @access private
      * @param string $filePath
      * @return mixed file handle || false
      */
-    private function _openFile($filePath) { 
+    private function openFile($filePath)
+    {
         $this->fileHandle = @fopen($filePath, 'r');
         return $this->fileHandle;
-    } 
+    }
 
     /**
      * Close a file.
-     * 
+     *
      * @access private
      * @return void
      */
-    private function _closeFile() { 
-        if ($this->fileHandle) { 
-            @fclose($this->fileHandle); 
-        } 
-    } 
+    private function closeFile()
+    {
+        if ($this->fileHandle) {
+            @fclose($this->fileHandle);
+        }
+    }
 
     /**
      * Get first line of CSV file as field names.
-     * 
+     *
      * @access private
      * @return void
      */
-    private function _getHeader() {
-        if ($this->legacyFgetcsv) {
-            $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure); 
-        } else {
-            $this->header = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape); 
-        }
+    private function getHeader()
+    {
+        // Position of file pointer to first line
+        rewind($this->fileHandle);
+        $this->header = fgetcsv(
+            $this->fileHandle,
+            $this->lineLength,
+            $this->delimiter,
+            $this->enclosure,
+            $this->escape
+        );
         // Fields that aren't predefined in $this->userFields, are treated as extended user-fields
         $this->extendedFields = array_diff($this->header, $this->userFields);
         if (!empty($this->extendedFields)) {
-    		$this->modx->log(modX::LOG_LEVEL_INFO, $this->modx->lexicon('userimport.import_users_log_extended_detected').implode(',', $this->extendedFields));
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                $this->modx->lexicon('userimport.import_users_log_extended_detected') .
+                implode(',', $this->extendedFields)
+            );
         }
     }
 
     /**
      * Import a batch of users into MODX database.
-     * 
+     *
      * @access public
      * @param int $batchSize (default: 0) If set to 0, get all the data at once
      * @param array $groups Array of MODX User Group ids
@@ -284,74 +312,91 @@ class ImportHandler {
      * @param string $mailBody The body of the notification mail
      * @return mixed int $importCount || false
      */
-    public function importUsers($batchSize = 0, $groups = array(), $role = 0, $autoUsername = false, $setImportmarker = true, $notifyUsers = false, $mailSubject = '', $mailBody = '') {
+    public function importUsers(
+        int $batchSize = 0,
+        array $groups = [],
+        int $role = 0,
+        bool $autoUsername = false,
+        bool $setImportmarker = true,
+        bool $notifyUsers = false,
+        string $mailSubject = '',
+        string $mailBody = ''
+    ) {
         $this->batchSize = $batchSize;
-
         if ($this->hasHeader) {
-            $this->_getHeader();
+            $this->getHeader();
         }
 
-        $newUsers = $this->_getImportUsers();
+        $newUsers = $this->getImportUsers();
         if (!$newUsers) {
             return false;
         }
 
-        $this->modx->invokeEvent('onBeforeUserImport', array('groups' => $groups));
+        $this->modx->invokeEvent('onBeforeUserImport', ['groups' => $groups]);
 
         // Main import loop
         $importCount = 0;
         foreach ($newUsers as $rowNumber => $newUser) {
-            if ($this->_saveUser($rowNumber, $newUser, $groups, $role, $autoUsername, $setImportmarker, $notifyUsers, $mailSubject, $mailBody)) {
+            if (
+                $this->saveUser(
+                    $rowNumber,
+                    $newUser,
+                    $groups,
+                    $role,
+                    $autoUsername,
+                    $setImportmarker,
+                    $notifyUsers,
+                    $mailSubject,
+                    $mailBody
+                )
+            ) {
                 $importCount++;
             }
         }
-        $this->modx->invokeEvent('onAfterUserImport', array('groups' => $groups));
+        $this->modx->invokeEvent('onAfterUserImport', ['groups' => $groups]);
         return $importCount;
     }
 
     /**
-     * Get users data from CSV file. 
-     * 
+     * Get users data from CSV file.
+     *
      * @todo Currently we only support CSV files with predifined columns/fields!
      *
      * @access private
      * @return mixed array $importUsers
      */
-    private function _getImportUsers() {
-            
-        $importUsers = array(); 
-        
+    private function getImportUsers()
+    {
+        $importUsers = [];
+
         if ($this->batchSize > 0) {
-            $lineCount = 0; 
+            $lineCount = 0;
         } else {
-            $lineCount = -1; // loop limit is ignored 
+            $lineCount = -1; // loop limit is ignored
         }
         while ($lineCount < $this->batchSize) {
-            
             // Get next row from CSV file
-            if ($this->legacyFgetcsv) {
-                $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure);
-            } else {
-                $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape);
+            $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape);
+            if (!$row) {
+                break;
             }
-            if (!$row) { break; }
-            
+
             // With header row (field names available)
             if ($this->header) {
-                $user = $this->_combineArrays($this->header, $row);
-                if ($user) { $importUsers[] = $user; }
-            
+                $user = $this->combineArrays($this->header, $row);
+                if ($user) {
+                    $importUsers[] = $user;
+                }
             // Without header row (no field names available)
             } else {
-                $importUsers[] = $this->_combineArraysSeq($this->userFields, $row);
+                $importUsers[] = $this->combineArraysSeq($this->userFields, $row);
             }
 
             if ($this->batchSize > 0) {
                 $lineCount++;
             }
-
-        } 
-        return $importUsers; 
+        }
+        return $importUsers;
     }
 
     /**
@@ -360,21 +405,24 @@ class ImportHandler {
      *
      * @access private
      * @param array $fields
-     * @param array $values 
+     * @param array $values
      * @return mixed array $combined The combined array of one row || false
      */
-    private function _combineArrays(array $fields, array $values) {
-        
+    private function combineArrays(array $fields, array $values)
+    {
         // Sanity check of row
         if (count($fields) != count($values)) {
-    		$this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_diff_fields_values_count').print_r($values, true));
+            $this->modx->log(
+                modX::LOG_LEVEL_ERROR,
+                $this->modx->lexicon('userimport.import_users_log_diff_fields_values_count') . print_r($values, true)
+            );
             return false;
         }
 
         $combined = array_combine($fields, $values);
-        
+
         // Get elements from $combined which doesnt exist in $this->userFields
-        $extended = array();
+        $extended = [];
         foreach ($this->extendedFields as $key) {
             if (array_key_exists($key, $combined) && ($combined[$key] != '')) {
                 $extended[$key] = $combined[$key];
@@ -393,39 +441,40 @@ class ImportHandler {
      *
      * @access private
      * @param array $fields
-     * @param array $values 
+     * @param array $values
      * @return array $combined The combined array of one row
      */
-    private function _combineArraysSeq(array $fields, array $values) {
-        
+    private function combineArraysSeq(array $fields, array $values)
+    {
         $fieldscount = count($fields);
         $valuescount = count($values);
-        
+
         // More fields than values
         if ($fieldscount > $valuescount) {
             // How many fields are we missing at the end of the $values array?
             $more = $fieldscount - $valuescount;
             // Add empty strings to ensure arrays $fields and $values have same number of elements
-            for($i = 0; $i < $more; $i++) {
+            for ($i = 0; $i < $more; $i++) {
                 $values[] = '';
             }
-        
-        // More values than fields
+
+            // More values than fields
         } elseif ($valuescount > $fieldscount) {
-            // Slice extra values        
+            // Slice extra values
             $values = array_slice($values, 0, $fieldscount);
         }
-        
+
         $combined = array_combine($fields, $values);
         return $combined;
     }
 
     /**
      * Save a new user + profile.
-     * 
+     *
      * @access private
      * @param int $rowNumber The row counter
-     * @param array $fieldvalues The field values for the new MODX user ($fieldvalues[0] = email, $fieldvalues[1] = fullname)
+     * @param array $fieldvalues The field values for the new MODX user
+     *        ($fieldvalues[0] = email, $fieldvalues[1] = fullname)
      * @param array $groups The MODX User Group IDs for the new MODX user
      * @param int $role The MODX User Role ID for the new MODX user
      * @param bool $autoUsername Automatically use email address as username?
@@ -435,25 +484,51 @@ class ImportHandler {
      * @param string $mailBody The body of the notification mail
      * @return boolean
      */
-    private function _saveUser($rowNumber, $fieldvalues, $groups, $role, $autoUsername, $setImportmarker, $notifyUsers, $mailSubject, $mailBody) {
+    private function saveUser(
+        $rowNumber,
+        $fieldvalues,
+        $groups,
+        $role,
+        $autoUsername,
+        $setImportmarker,
+        $notifyUsers,
+        $mailSubject,
+        $mailBody
+    ) {
         // (array key 0 = row number 1)
         $rowNumber = $rowNumber + 1;
 
         // email -> required!
         if (empty($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_email'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_ns_email')
+            );
             return false;
         }
         if (!$this->validEmail($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_invalid').$fieldvalues['email']);
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_email_invalid') . $fieldvalues['email']
+            );
             return false;
         }
         if ($this->emailExists($fieldvalues['email'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_ae').$fieldvalues['email']);
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_email_ae') . $fieldvalues['email']
+            );
             return false;
         }
         if (strlen($fieldvalues['email']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_email_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_email_max_len')
+            );
             return false;
         }
 
@@ -462,43 +537,71 @@ class ImportHandler {
             $fieldvalues['username'] = $fieldvalues['email'];
         }
         if (empty($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_ns_username'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_ns_username')
+            );
             return false;
         }
         if ($this->usernameExists($fieldvalues['username'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_username_ae').$fieldvalues['username']);
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_username_ae') . $fieldvalues['username']
+            );
             return false;
         }
         if (strlen($fieldvalues['username']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_username_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_username_max_len')
+            );
             return false;
         }
 
         // fullname
         if (!empty($fieldvalues['fullname']) && strlen($fieldvalues['fullname']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_fullname_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_fullname_max_len')
+            );
             return false;
         }
 
         // phone
         if (!empty($fieldvalues['phone']) && strlen($fieldvalues['phone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_phone_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_phone_max_len')
+            );
             return false;
         }
 
         // mobilephone
         if (!empty($fieldvalues['mobilephone']) && strlen($fieldvalues['mobilephone']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_mobilephone_max_len')
+            );
             return false;
         }
 
         // dob -> needs check!
         if (!empty($fieldvalues['dob']) || $fieldvalues['dob'] == '0') {
-            // dob can be provided as UNIX timestamp or 
+            // dob can be provided as UNIX timestamp or
             // any valid php date format
             // -> but always saved and handled as UNIX timestamp!
             if (!$this->validTimestamp($fieldvalues['dob']) && !$this->validDate($fieldvalues['dob'])) {
-        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_dob_invalid').$fieldvalues['dob']);
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                    $this->modx->lexicon('userimport.import_users_log_err_dob_invalid') . $fieldvalues['dob']
+                );
                 return false;
             }
             // if date format convert to timestamp
@@ -506,75 +609,119 @@ class ImportHandler {
                 $fieldvalues['dob'] = strtotime($fieldvalues['dob']);
             }
         }
-        
+
         // gender -> needs check!
         if (!empty($fieldvalues['gender']) && !$this->validGender($fieldvalues['gender'])) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_gender_invalid').$fieldvalues['gender']);
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_gender_invalid') . $fieldvalues['gender']
+            );
             return false;
         }
 
         // address
         if (!empty($fieldvalues['address']) && strlen($fieldvalues['address']) > 65535) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_address_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_address_max_len')
+            );
             return false;
         }
 
         // country
         if (!empty($fieldvalues['country']) && strlen($fieldvalues['country']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_country_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_country_max_len')
+            );
             return false;
         }
 
         // city
         if (!empty($fieldvalues['city']) && strlen($fieldvalues['city']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_city_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_city_max_len')
+            );
             return false;
         }
 
         // state
         if (!empty($fieldvalues['state']) && strlen($fieldvalues['state']) > 25) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_state_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_state_max_len')
+            );
             return false;
         }
 
         // zip
         if (!empty($fieldvalues['zip']) && strlen($fieldvalues['zip']) > 25) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_zip_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_zip_max_len')
+            );
             return false;
         }
 
         // fax
         if (!empty($fieldvalues['fax']) && strlen($fieldvalues['fax']) > 100) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_fax_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_fax_max_len')
+            );
             return false;
         }
 
         // photo
         if (!empty($fieldvalues['photo']) && strlen($fieldvalues['photo']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_photo_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_photo_max_len')
+            );
             return false;
         }
 
         // comment
         if (!empty($fieldvalues['comment']) && strlen($fieldvalues['comment']) > 65535) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_comment_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_comment_max_len')
+            );
             return false;
         }
 
         // website
         if (!empty($fieldvalues['website']) && strlen($fieldvalues['website']) > 255) {
-    		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_website_max_len'));
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_website_max_len')
+            );
             return false;
         }
 
         // extended (can be array or json string!)
         if (!empty($fieldvalues['extended']) && is_string($fieldvalues['extended'])) {
-
             // Try to convert json to array (returns NULL if not)
             $extendedArray = $this->jsonToArray($fieldvalues['extended']);
             // Check if conversion was successfull
             if (!is_array($extendedArray)) {
-        		$this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_extended_invalid_json').$fieldvalues['extended']);
+                $this->modx->log(
+                    modX::LOG_LEVEL_WARN,
+                    '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                    $this->modx->lexicon('userimport.import_users_log_err_extended_invalid_json') .
+                    $fieldvalues['extended']
+                );
                 return false;
             }
             $fieldvalues['extended'] = $extendedArray;
@@ -583,45 +730,45 @@ class ImportHandler {
         $userSaved = false;
 
         // New modUser
-        $user = $this->modx->newObject('modUser');
-        
+        $user = $this->modx->newObject(modUser::class);
+
         // Use provided password or auto-generate one
-        $password = $this->_setPassword($user, $fieldvalues, $rowNumber);
-        
+        $password = $this->setPassword($user, $fieldvalues, $rowNumber);
+
         // Add modUser -> required fields
         $user->set('username', $fieldvalues['username']);
-		$user->set('password', $password);
-		$user->set('active',   1);
-		$user->set('blocked',  0);
-		
-		// Add modUserProfile -> required fields
-        $userProfile = $this->modx->newObject('modUserProfile');
-        
-		// Add import info to extended profile field (if option is activated)
-		$importInfo = array();
-		if ($setImportmarker) {
+        $user->set('password', $password);
+        $user->set('active', 1);
+        $user->set('blocked', 0);
+
+        // Add modUserProfile -> required fields
+        $userProfile = $this->modx->newObject(modUserProfile::class);
+
+        // Add import info to extended profile field (if option is activated)
+        $importInfo = [];
+        if ($setImportmarker) {
             $importInfo = array(
                 'UserImport' => array(
-                    'Date' => strftime('%Y-%m-%d %H:%M:%S'),
-                    'Key'  => $this->importKey,
+                    'Date' => date('Y-m-d H:i:s'),
+                    'Key' => $this->importKey,
                 )
             );
-		}
-        
+        }
+
         // Add extended fields (combined with import info) if any
         if (!empty($fieldvalues['extended']) && is_array($fieldvalues['extended'])) {
             $fieldvalues['extended'] = array_merge($fieldvalues['extended'], $importInfo);
         } else {
             $fieldvalues['extended'] = $importInfo;
         }
-        
+
         $userProfile->fromArray($fieldvalues);
         $user->addOne($userProfile);
-        
-		if ($user->save()) {
+
+        if ($user->save()) {
             $userSaved = true;
             $userId = $user->get('id'); // preserve id of new user for later use
-            
+
             // Add user to MODX user group and assign role
             if (isset($groups) && is_array($groups) && !empty($groups)) {
                 foreach ($groups as $group) {
@@ -631,28 +778,47 @@ class ImportHandler {
                     }
                 }
             }
-		}
-		
-		if (!$userSaved) {
+        }
+
+        if (!$userSaved) {
             // Rollback if one of the savings failed!
             $user->remove();
-            $this->modx->log(modX::LOG_LEVEL_WARN, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_err_user_failed').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
-		} else {
-    		$this->modx->log(modX::LOG_LEVEL_INFO, '-> '.$this->modx->lexicon('userimport.import_users_row').$rowNumber.' '.$this->modx->lexicon('userimport.import_users_log_imported_user').$fieldvalues['username'].' ('.$fieldvalues['email'].')');
-    		// Send a notification email if enabled
-    		if ($notifyUsers) {
-        		// Returns an array (sent, error_info)
-                $notificationStatus = $this->sendNotificationEmail($user, $userProfile, $password, $mailSubject, $mailBody);
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_err_user_failed') . $fieldvalues['username'] .
+                ' (' . $fieldvalues['email'] . ')'
+            );
+        } else {
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_imported_user') . $fieldvalues['username'] .
+                ' (' . $fieldvalues['email'] . ')'
+            );
+            // Send a notification email if enabled
+            if ($notifyUsers) {
+                // Returns an array (sent, error_info)
+                $notificationStatus = $this->sendNotificationEmail(
+                    $user,
+                    $userProfile,
+                    $password,
+                    $mailSubject,
+                    $mailBody
+                );
                 if ($notificationStatus['sent'] == true) {
                     $this->modx->log(modX::LOG_LEVEL_INFO, '&nbsp;&nbsp;&nbsp;Notification mail sent.');
                 } else {
-                    $this->modx->log(modX::LOG_LEVEL_ERROR, '&nbsp;&nbsp;&nbsp;Could not send notification mail: '.$notificationStatus['erro_info']);
+                    $this->modx->log(
+                        modX::LOG_LEVEL_ERROR,
+                        '&nbsp;&nbsp;&nbsp;Could not send notification mail: ' . $notificationStatus['erro_info']
+                    );
                 }
-    		}
-		}
-		return $userSaved;
+            }
+        }
+        return $userSaved;
     }
-    
+
     /**
      * Looks for a field called "password" in the import file, validates it, and defaults to an auto-generated password
      *
@@ -662,9 +828,13 @@ class ImportHandler {
      * @param int $rowNumber
      * @return bool|string
      */
-    private function _setPassword(modUser &$user, $fieldvalues, $rowNumber) {
-        $generatedPasswordLength = (integer)$this->modx->getOption('password_generated_length', null, 8);
-        if (!empty($fieldvalues['password']) && ($providedPassword = $this->_validateProvidedPassword($fieldvalues['password'], $rowNumber))) {
+    private function setPassword(modUser &$user, $fieldvalues, $rowNumber)
+    {
+        $generatedPasswordLength = (int)$this->modx->getOption('password_generated_length', null, 8);
+        if (
+            !empty($fieldvalues['password']) &&
+            ($providedPassword = $this->validateProvidedPassword($fieldvalues['password'], $rowNumber))
+        ) {
             $password = $providedPassword;
         } else {
             $password = $user->generatePassword($generatedPasswordLength);
@@ -673,52 +843,60 @@ class ImportHandler {
     }
 
     /**
-     * Check that the password provided in the import file is suitable for use
+     * Check that the password provided in the import file is suitable for use.
      *
      * @access private
-     * @param $password
-     * @param $rowNumber
+     * @param string $password
+     * @param int $rowNumber
      * @return bool|string Returns false if not valid
      */
-    private function _validateProvidedPassword($password, $rowNumber) {
-        $minPasswordLength = (integer)$this->modx->getOption('password_min_length', null, 8);
+    private function validateProvidedPassword($password, $rowNumber)
+    {
+        $minPasswordLength = (int)$this->modx->getOption('password_min_length', null, 8);
         if (strlen($password) < $minPasswordLength) {
-            $this->modx->log(modX::LOG_LEVEL_INFO, '&nbsp;&nbsp;&nbsp;*)'.$this->modx->lexicon('userimport.import_users_log_password_autogenerated').' '.$this->modx->lexicon('userimport.import_users_log_password_len').$minPasswordLength);
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                '&nbsp;&nbsp;&nbsp;*)' .
+                $this->modx->lexicon('userimport.import_users_log_password_autogenerated') . ' ' .
+                $this->modx->lexicon('userimport.import_users_log_password_len') . $minPasswordLength
+            );
             return false;
         }
         return $password;
     }
-    
+
     /**
      * Check if a username already exists.
-     * 
+     *
      * @access public
      * @param string $username
      * @return mixed ID of MODX user or false
      */
-    public function usernameExists($username) {
-		$user = $this->modx->getObject('modUser', array('username' => $username));
-		if (is_object($user)) {
-    		return $user->get('id');
-		} else {
-    		return false;
-		}
+    public function usernameExists(string $username)
+    {
+        $user = $this->modx->getObject(modUser::class, array('username' => $username));
+        if (is_object($user)) {
+            return $user->get('id');
+        } else {
+            return false;
+        }
     }
-    
+
     /**
      * Check if an email address already exists.
-     * 
+     *
      * @access public
      * @param string $email
      * @return mixed ID of MODX user or false
      */
-    public function emailExists($email) {
-		$userProfile = $this->modx->getObject('modUserProfile', array('email' => $email));
-		if (is_object($userProfile)) {
-    		return $userProfile->get('internalKey');
-		} else {
-    		return false;
-		}
+    public function emailExists(string $email)
+    {
+        $userProfile = $this->modx->getObject(modUserProfile::class, array('email' => $email));
+        if (is_object($userProfile)) {
+            return $userProfile->get('internalKey');
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -728,7 +906,8 @@ class ImportHandler {
      * @param string $mimetype The mime-type to check
      * @return boolean $iscsv
      */
-    public function csvMimeType($mimetype) {
+    public function csvMimeType(string $mimetype)
+    {
         $csv_mimetypes = array(
             'text/csv',
             'text/plain',
@@ -740,14 +919,14 @@ class ImportHandler {
             'text/anytext',
             'application/octet-stream',
             'application/txt',
-            'application/download',        
+            'application/download',
         );
         if (in_array($mimetype, $csv_mimetypes)) {
             return true;
         }
         return false;
     }
-    
+
     /**
      * Checks if we have a valid email address.
      *
@@ -755,15 +934,11 @@ class ImportHandler {
      * @param string $email The email address to check
      * @return boolean
      */
-    public function validEmail($email) {
-        $validEmail = false;      
-        $cleanEmail = filter_var($email, FILTER_SANITIZE_EMAIL);
-        if ($cleanEmail === $email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $validEmail = true;
-        }
-        return $validEmail;
+    public function validEmail($email)
+    {
+        return filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE);
     }
-    
+
     /**
      * Checks if we have a valid UNIX timestamp.
      *
@@ -771,14 +946,15 @@ class ImportHandler {
      * @param string $timestamp The timestamp to check.
      * @return boolean
      */
-    public function validTimestamp($timestamp) {
-    	$check = (is_int($timestamp) OR is_float($timestamp))
-    		? $timestamp
-    		: (string) (int) $timestamp;
-     
-    	return ($check === $timestamp)
-        	AND ( (int) $timestamp <=  PHP_INT_MAX)
-        	AND ( (int) $timestamp >= ~PHP_INT_MAX);
+    public function validTimestamp($timestamp)
+    {
+        $check = (is_int($timestamp) or is_float($timestamp))
+            ? $timestamp
+            : (string) (int) $timestamp;
+
+        return ($check === $timestamp)
+            and ((int) $timestamp <=  PHP_INT_MAX)
+            and ((int) $timestamp >= ~PHP_INT_MAX);
     }
 
     /**
@@ -788,14 +964,14 @@ class ImportHandler {
      * @param string $date The date string to check.
      * @return boolean
      */
-    function validDate($date) {
+    public function validDate($date)
+    {
         try {
-            $dt = new DateTime(trim($date));
-        }
-        catch(Exception $e) {
+            $dt = new \DateTime(trim($date));
+        } catch (\Exception $e) {
             return false;
         }
-        
+
         $month = $dt->format('m');
         $day   = $dt->format('d');
         $year  = $dt->format('Y');
@@ -810,7 +986,8 @@ class ImportHandler {
      * @param string $gender The value to check
      * @return boolean
      */
-    public function validGender($gender) {
+    public function validGender($gender)
+    {
         if ($gender != '1' && $gender != '2' && $gender != '3') {
             return false;
         }
@@ -822,9 +999,10 @@ class ImportHandler {
      *
      * @access public
      * @param string $json The string to convert
-     * @return mixed array || NULL
+     * @return mixed array | NULL
      */
-    public function jsonToArray($json) {
+    public function jsonToArray($json)
+    {
         return json_decode($json, true);
     }
 
@@ -839,52 +1017,56 @@ class ImportHandler {
      * @param string $mailBody The body of the notification mail
      * @return boolean
      */
-    public function sendNotificationEmail($user, $profile, $password, $mailSubject, $mailBody) {
-
+    public function sendNotificationEmail(
+        modUser $user,
+        modUserProfile $profile,
+        string $password,
+        string $mailSubject,
+        string $mailBody
+    ) {
         // Set confirmation email properties
-                
+
         // Flatten extended fields:
         // extended.field1
         // extended.container1.field2
         // ...
-        $extended = $profile->get('extended') ? $profile->get('extended') : array();
+        $extended = $profile->get('extended') ? $profile->get('extended') : [];
         if (!empty($extended)) {
-            $extended = $this->_flattenExtended($extended, 'extended.');
+            $extended = $this->flattenExtended($extended, 'extended.');
         }
         $emailProperties = array_merge(
             $profile->toArray(),
             $user->toArray(),
             $extended
         );
-        $emailProperties = $this->_cleanupKeys($emailProperties);
-        
+        $emailProperties = $this->cleanupKeys($emailProperties);
+
         // Now re-add the password field with password in cleartext (so it will be available as placeholder)
         $emailProperties['password'] = $password;
 
         // Parse mailbody and process MODX user/profile placeholders
-        $chunk = $this->modx->newObject('modChunk');
+        $chunk = $this->modx->newObject(modChunk::class);
         $chunk->setCacheable(false);
         $output = $chunk->process($emailProperties, $mailBody);
         $emailProperties['mailbody'] = $output;
         $emailProperties['mailsubject'] = $mailSubject;
 
         // Send email!
-        $this->modx->getService('mail', 'mail.modPHPMailer');
-        $this->modx->mail->set(modMail::MAIL_FROM, $this->modx->getOption('emailsender'));
-        $this->modx->mail->set(modMail::MAIL_FROM_NAME, $this->modx->getOption('site_name'));
-        $this->modx->mail->set(modMail::MAIL_SENDER, $this->modx->getOption('emailsender'));
-        $this->modx->mail->set(modMail::MAIL_SUBJECT, $emailProperties['mailsubject']);
-        $this->modx->mail->set(modMail::MAIL_BODY, $emailProperties['mailbody']);
-        $this->modx->mail->address('to', $emailProperties['email'], $emailProperties['email']);
-        $this->modx->mail->address('reply-to', $this->modx->getOption('emailsender'));
-        $this->modx->mail->setHTML(true);
-                
-        $sent = $this->modx->mail->send();
-        $this->modx->mail->reset();
-        
-        $sendStatus = array();
+        $mail = $this->modx->services->get('mail');
+        $mail->set(modMail::MAIL_FROM, $this->modx->getOption('emailsender'));
+        $mail->set(modMail::MAIL_FROM_NAME, $this->modx->getOption('site_name'));
+        $mail->set(modMail::MAIL_SENDER, $this->modx->getOption('emailsender'));
+        $mail->set(modMail::MAIL_SUBJECT, $emailProperties['mailsubject']);
+        $mail->set(modMail::MAIL_BODY, $emailProperties['mailbody']);
+        $mail->address('to', $emailProperties['email'], $emailProperties['email']);
+        $mail->address('reply-to', $this->modx->getOption('emailsender'));
+        $mail->setHTML(true);
+
+        $sent = $mail->send();
+        $sendStatus = [];
         $sendStatus['sent'] = $sent;
-        $sendStatus['erro_info'] = $this->modx->mail->mailer->ErrorInfo;
+        $sendStatus['erro_info'] = $mail->mailer->ErrorInfo;
+        $mail->reset();
 
         return $sendStatus;
     }
@@ -896,7 +1078,8 @@ class ImportHandler {
      * @param array $properties
      * @return array $properties
      */
-    private function _cleanupKeys(array $properties = array()) {
+    private function cleanupKeys(array $properties = [])
+    {
         unset(
             $properties['password'],    // security!
             $properties['cachepwd'],    // security!
@@ -904,25 +1087,26 @@ class ImportHandler {
             $properties['internalKey'], // not needed (id of profile is overwritten by id of user table)
             $properties['sessionid'],   // security!
             $properties['extended']     // not needed as its already flattened
-        );    
+        );
         return $properties;
     }
 
     /**
      * Helper function to recursively flatten an array.
-     * 
+     *
      * @access private
      * @param array $array The array to be flattened.
      * @param string $prefix The prefix for each new array key.
      * @return array $result The flattened and prefixed array.
      */
-    private function _flattenExtended($array, $prefix = '') {
-        $result = array();
-        foreach($array as $key => $value) {
+    private function flattenExtended($array, $prefix = '')
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
             if (is_array($value)) {
-                $result = $result + $this->_flattenExtended($value, $prefix.$key.'.');
+                $result = $result + $this->flattenExtended($value, $prefix . $key . '.');
             } else {
-                $result[$prefix.$key] = $value;
+                $result[$prefix . $key] = $value;
             }
         }
         return $result;
