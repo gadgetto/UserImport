@@ -1,0 +1,21 @@
+{
+    "name": "bitego/userimport",
+    "description": "An extra for MODX Revolution CMF to easily import users into the MODX user database",
+    "type": "modx-plugin",
+    "license": "GNU General Public License v2",
+    "keywords": [
+      "modx",
+      "UserImport"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Bitego\\UserImport\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Martin Gartner",
+            "email": "martin.gartner@bitego.com"
+        }
+    ]
+}
