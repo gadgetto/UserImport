@@ -95,7 +95,7 @@ class ImportHandler
     public function __construct(modX &$modx, array $config = [])
     {
         $this->modx = &$modx;
-        $this->modx->lexicon->load('user,userimport:default');
+        $this->modx->lexicon->load('user', 'userimport:default');
         $this->importKey = uniqid('uik', true);
         $this->config = array_merge([
             'use_multibyte' => (bool)$this->modx->getOption('use_multibyte', null, false),

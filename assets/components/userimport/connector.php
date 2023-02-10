@@ -23,7 +23,7 @@ require_once MODX_CORE_PATH . 'config/' . MODX_CONFIG_KEY . '.inc.php';
 require_once MODX_CONNECTORS_PATH . 'index.php';
 
 $userimport = $modx->services->get('userimport');
-$modx->lexicon->load('userimport:default');
+$modx->lexicon->load('user', 'userimport:default');
 
 $modx->request->handleRequest([
     'processors_path' => $userimport->config['processorsPath'],

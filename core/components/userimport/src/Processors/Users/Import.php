@@ -35,7 +35,7 @@ class Import extends Processor
      */
     public function getLanguageTopics()
     {
-        return ['user,userimport:default'];
+        return ['user', 'userimport:default'];
     }
 
     /**
