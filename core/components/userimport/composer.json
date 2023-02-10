@@ -17,5 +17,8 @@
             "name": "Martin Gartner",
             "email": "martin.gartner@bitego.com"
         }
-    ]
+    ],
+    "require": {
+        "soundasleep/html2text": "^2.1"
+    }
 }

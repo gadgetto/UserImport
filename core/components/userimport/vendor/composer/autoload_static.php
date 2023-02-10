@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInit216709db0c37e312794bdfc68394fec0
 {
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Soundasleep\\' => 12,
+        ),
         'B' => 
         array (
             'Bitego\\UserImport\\' => 18,
@@ -14,6 +18,10 @@ class ComposerStaticInit216709db0c37e312794bdfc68394fec0
     );
 
     public static $prefixDirsPsr4 = array (
+        'Soundasleep\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/soundasleep/html2text/src',
+        ),
         'Bitego\\UserImport\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',

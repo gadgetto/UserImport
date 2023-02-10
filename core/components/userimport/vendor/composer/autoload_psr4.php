@@ -6,5 +6,6 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Soundasleep\\' => array($vendorDir . '/soundasleep/html2text/src'),
     'Bitego\\UserImport\\' => array($baseDir . '/src'),
 );
