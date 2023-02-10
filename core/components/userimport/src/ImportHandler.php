@@ -17,6 +17,7 @@ use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modChunk;
 use MODX\Revolution\Mail\modMail;
+use Soundasleep\Html2Text;
 
 /**
  * ImportHandler class handles batch import of users into MODX users database
@@ -1051,6 +1052,10 @@ class ImportHandler
         $emailProperties['mailbody'] = $output;
         $emailProperties['mailsubject'] = $mailSubject;
 
+        $bodyText = Html2Text::convert($emailProperties['mailbody'], [
+            'ignore_errors' => true,
+        ]);
+
         // Send email!
         $mail = $this->modx->services->get('mail');
         $mail->set(modMail::MAIL_FROM, $this->modx->getOption('emailsender'));
@@ -1058,6 +1063,7 @@ class ImportHandler
         $mail->set(modMail::MAIL_SENDER, $this->modx->getOption('emailsender'));
         $mail->set(modMail::MAIL_SUBJECT, $emailProperties['mailsubject']);
         $mail->set(modMail::MAIL_BODY, $emailProperties['mailbody']);
+        $mail->set(modMail::MAIL_BODY_TEXT, $bodyText);
         $mail->address('to', $emailProperties['email'], $emailProperties['email']);
         $mail->address('reply-to', $this->modx->getOption('emailsender'));
         $mail->setHTML(true);
