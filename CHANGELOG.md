@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- User notification mails are now generated as multipart mails (HTML + plain-text)
+
+### Changed
+- Fully refactored for MODX3 (UserImport 2.x only!)
+
+### Fixed
+- Removed deprecated use of strftime (PHP8+)
+
 ## [1.1.1-pl] - 2020-05-19
 ### Added
 - Added new checks for import file
