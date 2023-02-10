@@ -35,7 +35,7 @@ UserImport.panel.NotificationTemplate = function(config) {
                 xtype: 'textarea'
                 ,name: 'mailbody'
                 ,id: 'mailbody'
-                ,growMin: 250
+                ,growMin: 280
                 ,grow: true
                 ,fieldLabel: _('userimport.notification_template_mail_body')
                 ,description: MODx.expandHelp ? '' : _('userimport.notification_template_mail_body_desc')
