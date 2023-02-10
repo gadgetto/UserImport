@@ -1,16 +1,16 @@
 UserImport.panel.NotificationTemplate = function(config) {
     config = config || {};
-        
+    
     Ext.applyIf(config,{
         id: 'userimport-panel-notification-template'
-        ,title: _('userimport.notification_template_tab')   
-        ,defaults: { 
-            border: false 
+        ,title: _('userimport.notification_template_tab')
+        ,layout: 'anchor'
+        ,defaults: {
+            border: false
         }
         ,items:[{
             html: '<p>'+_('userimport.notification_template_tab_desc')+'</p>'
-            ,border: false
-            ,bodyCssClass: 'panel-desc'
+            ,xtype: 'modx-description'
         },{
             layout: 'form'
             ,cls: 'main-wrapper'

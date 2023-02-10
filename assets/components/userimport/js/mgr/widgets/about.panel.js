@@ -19,7 +19,8 @@ UserImport.panel.About = function(config) {
         
     Ext.applyIf(config,{
         id: 'userimport-panel-about'
-        ,title: _('userimport.about_tab')   
+        ,title: _('userimport.about_tab')
+        ,layout: 'anchor'
         ,defaults: { 
             border: false 
         }

@@ -3,14 +3,14 @@ UserImport.panel.Import = function(config) {
 
     Ext.applyIf(config,{
         id: 'userimport-panel-import'
-        ,title: _('userimport.import_users_tab')   
+        ,title: _('userimport.import_users_tab')
+        ,layout: 'anchor'
         ,defaults: { 
             border: false 
         }
         ,items:[{
             html: '<p>'+_('userimport.import_users_tab_desc')+'</p>'
-            ,border: false
-            ,bodyCssClass: 'panel-desc'
+            ,xtype: 'modx-description'
         },{
             layout: 'form'
             ,cls: 'main-wrapper'
@@ -149,8 +149,9 @@ UserImport.panel.Import = function(config) {
                         ,items: [{
                             xtype: 'modx-tree'
                             ,id: 'userimport-tree-usergroups'
+                            ,cls: 'ui-tree-usergroups'
                             ,url: UserImport.config.connectorUrl
-                            ,action: 'mgr/usergroups/getUserGroupNodes'
+                            ,action: 'Bitego\\UserImport\\Processors\\Usergroups\\GetNodes'
                             ,autoHeight: false
                             ,height: 160
                             ,root_id: 'n_ug_0'

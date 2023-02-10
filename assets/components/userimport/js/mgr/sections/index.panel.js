@@ -16,7 +16,6 @@ UserImport.IndexPanel = function(config) {
         id: 'userimport-panel-index'
         ,cls: 'container'
         ,bodyStyle: ''
-        ,unstyled: true
         ,fileUpload: true
         ,items: [{
             html: _('userimport.cmp_title')
@@ -33,6 +32,12 @@ UserImport.IndexPanel = function(config) {
                 xtype: 'userimport-panel-about'
             }]
         }]
+        ,listeners: {
+            'tabchange': {fn: function(panel) {
+                panel.doLayout();
+            }
+            ,scope: this}
+        }
     });
     Ext.Ajax.timeout = 0;
     UserImport.IndexPanel.superclass.constructor.call(this,config);
@@ -41,11 +46,11 @@ UserImport.IndexPanel = function(config) {
 Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
     init: function(){
         this.actionToolbar = new Ext.Toolbar({
-            renderTo: 'modAB'
+            renderTo: 'modx-action-buttons-container'
             ,id: 'modx-action-buttons'
             ,defaults: { scope: this }
             ,items: this.getButtons()
-        });                                
+        });
         this.actionToolbar.doLayout();
         this.getSettings();
     }
@@ -97,7 +102,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         this.getForm().submit({
             url: UserImport.config.connectorUrl
             ,params: {
-                action: 'mgr/users/import'
+                action: 'Bitego\\UserImport\\Processors\\Users\\Import'
                 ,register: register
                 ,topic: topic
             }
@@ -120,15 +125,15 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,cls: 'primary-button'
             ,handler: this.startUserImport
             ,scope: this
-        },'-');
+        });
         buttons.push({
             text: '<i class="icon icon-check-circle icon-lg"></i>&nbsp;' + _('userimport.settings_save_button')
             ,id: 'button-settings-save'
             ,handler: this.updateSettings
             ,scope: this
-        },'-')
+        });
         buttons.push({
-            text: _('help_ex')
+            text: '<i class="icon icon-question-circle"></i>'
             ,id: 'button-help'
             ,handler: function(){
                 MODx.config.help_url = UserImport.config.helpUrl;
@@ -142,14 +147,14 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         this.getForm().load({
             url: UserImport.config.connectorUrl
             ,params: {
-                action: 'mgr/settings/get'
+                action: 'Bitego\\UserImport\\Processors\\Settings\\Get'
             }
             ,waitMsg: _('userimport.msg_loading_defaults')
-            ,success: function(){
-                //console.info(data);
+            ,success: function(data){
+                //console.log(data);
             }
             ,failure: function(results,request){
-                Ext.MessageBox.alert(_('userimport.msg_loading_defaults_failed'),result.responseText);
+                Ext.MessageBox.alert(_('userimport.msg_loading_defaults_failed'),results.responseText);
             }
             ,scope: this
         });
@@ -158,7 +163,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         this.getForm().submit({
             url: UserImport.config.connectorUrl
             ,params: {
-                action: 'mgr/settings/update'
+                action: 'Bitego\\UserImport\\Processors\\Settings\\Update'
             }
             ,waitMsg: _('userimport.msg_saving_defaults')
             ,success: function(form,action){
