@@ -109,7 +109,7 @@ class Import extends Processor
         $hasHeader = $this->getProperty('hasheader') ? true : false;
 
         // Make sure a batchsize was specified
-        $batchsize = $this->getProperty('batchsize');
+        $batchsize = $this->getProperty('batchsize', 0);
         if (empty($batchsize) && !is_numeric($batchsize)) {
             $this->addFieldError('batchsize', $this->modx->lexicon('userimport.import_users_log_ns_batchsize'));
             $this->modx->log(
@@ -154,7 +154,7 @@ class Import extends Processor
         $notifyUsers = $this->getProperty('notifyusers') ? true : false;
 
         // Get mailSubject setting
-        $mailSubject = $this->getProperty('mailsubject');
+        $mailSubject = $this->getProperty('mailsubject', '');
         if ($notifyUsers && empty($mailSubject)) {
             $this->addFieldError('mailsubject', $this->modx->lexicon('userimport.import_users_log_ns_mailsubject'));
             $this->modx->log(
@@ -166,7 +166,7 @@ class Import extends Processor
         }
 
         // Get mailBody setting
-        $mailBody = $this->getProperty('mailbody');
+        $mailBody = $this->getProperty('mailbody', '');
         if ($notifyUsers && empty($mailBody)) {
             $this->addFieldError('mailbody', $this->modx->lexicon('userimport.import_users_log_ns_mailbody'));
             $this->modx->log(
@@ -199,7 +199,7 @@ class Import extends Processor
         }
 
         // Get MODX user role
-        $role = $this->getProperty('role');
+        $role = $this->getProperty('role', 0);
 
         // Only continue with processing if no errors occurred
         if ($error || $this->hasErrors()) {
