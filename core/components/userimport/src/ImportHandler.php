@@ -594,10 +594,10 @@ class ImportHandler
 
         // dob -> needs check!
         if (!empty($fieldvalues['dob']) || $fieldvalues['dob'] == '0') {
-            // dob can be provided as UNIX timestamp or
-            // any valid php date format
+            // dob can be provided as UNIX timestamp or any valid php date format
+            // https://www.php.net/manual/en/datetime.formats.php
             // -> but always saved and handled as UNIX timestamp!
-            if (!$this->validTimestamp($fieldvalues['dob']) && !$this->validDate($fieldvalues['dob'])) {
+            if (!$this->validTimestamp($fieldvalues['dob']) && !$this->validBirthDate($fieldvalues['dob'])) {
                 $this->modx->log(
                     modX::LOG_LEVEL_WARN,
                     '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .
@@ -606,7 +606,7 @@ class ImportHandler
                 return false;
             }
             // if date format convert to timestamp
-            if ($this->validDate($fieldvalues['dob'])) {
+            if ($this->validBirthDate($fieldvalues['dob'])) {
                 $fieldvalues['dob'] = strtotime($fieldvalues['dob']);
             }
         }
@@ -941,7 +941,7 @@ class ImportHandler
     }
 
     /**
-     * Checks if we have a valid UNIX timestamp.
+     * Checks if we have a valid UNIX timestamp for MySQL sigend int(10) fields.
      *
      * @access public
      * @param string $timestamp The timestamp to check.
@@ -954,29 +954,33 @@ class ImportHandler
             : (string) (int) $timestamp;
 
         return ($check === $timestamp)
-            and ((int) $timestamp <=  PHP_INT_MAX)
-            and ((int) $timestamp >= ~PHP_INT_MAX);
+            and ((int) $timestamp <= 2147483647)
+            and ((int) $timestamp >= -2147483648);
     }
 
     /**
-     * Checks if we have a valid date.
+     * Checks if we have a valid birth date.
      *
      * @access public
      * @param string $date The date string to check.
      * @return boolean
      */
-    public function validDate($date)
+    public function validBirthDate($date)
     {
-        try {
-            $dt = new \DateTime(trim($date));
-        } catch (\Exception $e) {
-            return false;
+        $validBirthDate = false;
+        $parsed = date_parse($date);
+        if (
+            $parsed['error_count'] == 0 &&
+            $parsed['warning_count'] == 0 &&
+            !empty($parsed['year']) &&
+            !empty($parsed['month']) &&
+            !empty($parsed['day'])
+        ) {
+            if (checkdate($parsed['month'], $parsed['day'], $parsed['year'])) {
+                $validBirthDate = $this->validTimestamp(strtotime($date));
+            }
         }
-
-        $month = $dt->format('m');
-        $day   = $dt->format('d');
-        $year  = $dt->format('Y');
-        return checkdate($month, $day, $year);
+        return $validBirthDate;
     }
 
     /**
