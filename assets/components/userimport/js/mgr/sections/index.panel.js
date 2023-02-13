@@ -70,6 +70,8 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         }
         this.console = MODx.load({
             xtype: 'modx-console'
+            ,width: 680
+            ,height: 460
             ,register: register
             ,topic: topic
             ,listeners: {
