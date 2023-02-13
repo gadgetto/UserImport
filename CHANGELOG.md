@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fully refactored for MODX3 (UserImport 2.x only!)
 
 ### Fixed
+- [#11] Fixes missing mailsubject and mailbody when import process starts
 - Removed deprecated use of strftime (PHP8+)
 
 ## [1.1.1-pl] - 2020-05-19

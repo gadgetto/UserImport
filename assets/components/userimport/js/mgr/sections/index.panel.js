@@ -24,6 +24,7 @@ UserImport.IndexPanel = function(config) {
             xtype: 'modx-tabs'
             ,itemId: 'tabs'
 			,cls: 'structure-tabs'
+            ,deferredRender: false
             ,items: [{
                 xtype: 'userimport-panel-import'
             },{
