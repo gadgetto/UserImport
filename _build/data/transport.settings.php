@@ -79,20 +79,35 @@ $settings['userimport.mailsubject']->fromArray([
 ], '', true, true);
 
 $mailbody = <<<EOT
-Hello,<br>
-<br>
-we\'d like to inform you, that your user credentials were imported into our system and a new user account was created for you!<br> 
-<br>
-<strong>Here are your new account credentials:</strong><br>
-<br>
-Name: [[+fullname]]<br>
-Email: [[+email]]<br>
-Your username: [[+username]]<br>
-Your password: [[+password]]<br>
-<br>
-If you have any questions please don\'t hesitate to contact us!<br>
-<br>
-Your [[++site_name]] team
+<!DOCTYPE html>
+<html lang="[[++cultureKey]]">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=[[++modx_charset]]">
+        <title>Account Notification</title>
+    </head>
+    <body>
+        <p>
+            Hello,<br>
+            <br>
+            we\'d like to inform you, that your user credentials were imported 
+            into our system and a new user account was created for you!
+        </p>
+        <p>
+            <strong>Here are your new account credentials:</strong><br>
+            <br>
+            Name: [[+fullname]]<br>
+            Email: [[+email]]<br>
+            Your username: [[+username]]<br>
+            Your password: [[+password]]
+        </p>
+        <p>
+            If you have any questions please don\'t hesitate to contact us!
+        </p>
+        <p>
+            Your [[++site_name]] team
+        </p>
+    </body>
+</html>
 EOT;
 
 $settings['userimport.mailbody'] = $modx->newObject(modSystemSetting::class);
