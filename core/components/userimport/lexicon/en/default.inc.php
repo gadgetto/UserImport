@@ -27,6 +27,11 @@ $_lang['userimport.notification_template_mail_subject']         = 'Mail Subject'
 $_lang['userimport.notification_template_mail_subject_desc']    = 'Enter the subject for the email notification here.';
 $_lang['userimport.notification_template_mail_body']            = 'Mail Body';
 $_lang['userimport.notification_template_mail_body_desc']       = 'Enter the body for the email notification here.';
+$_lang['userimport.notification_mail_options']                  = 'Mail Options';
+$_lang['userimport.notification_mail_format']                   = 'Mail Format';
+$_lang['userimport.notification_mail_format_desc']              = 'The format of the mail body.';
+$_lang['userimport.notification_mail_format_html']              = 'HTML';
+$_lang['userimport.notification_mail_format_plaintext']         = 'Plain text';
 
 $_lang['userimport.import_users_tab']                           = 'Users';
 $_lang['userimport.import_users_tab_desc']                      = 'Import users to the MODX user database, automatically add them to MODX user groups and assign MODX user roles. For informations about how to format the CSV file, please click the <strong>Help!</strong> button.';
@@ -128,3 +133,5 @@ $_lang['setting_userimport.mailsubject']                        = 'Mail Subject'
 $_lang['setting_userimport.mailsubject_desc']                   = 'Enter the subject for the email notification.';
 $_lang['setting_userimport.mailbody']                           = 'Mail Body';
 $_lang['setting_userimport.mailbody_desc']                      = 'Enter the body for the email notification.';
+$_lang['setting_userimport.mail_format']                        = 'Mail Format';
+$_lang['setting_userimport.mail_format_desc']                   = 'The format of the mail body (1 = HTML, 0 = Plain text)';

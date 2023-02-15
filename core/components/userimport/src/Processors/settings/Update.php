@@ -35,6 +35,7 @@ class Update extends Processor
             'notifyusers',
             'mailsubject',
             'mailbody',
+            'mail_format',
         ];
 
         foreach ($settings as $key) {

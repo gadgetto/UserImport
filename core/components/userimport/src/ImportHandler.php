@@ -311,6 +311,7 @@ class ImportHandler
      * @param bool $notifyUsers Notify imported users via email?
      * @param string $mailSubject The subject of the notification mail
      * @param string $mailBody The body of the notification mail
+     * @param bool $mailFormat The format of the mail body (true = HTML, false = Plain text)
      * @return mixed int $importCount || false
      */
     public function importUsers(
@@ -321,7 +322,8 @@ class ImportHandler
         bool $setImportmarker = true,
         bool $notifyUsers = false,
         string $mailSubject = '',
-        string $mailBody = ''
+        string $mailBody = '',
+        bool $mailFormat = true
     ) {
         $this->batchSize = $batchSize;
         if ($this->hasHeader) {
@@ -348,7 +350,8 @@ class ImportHandler
                     $setImportmarker,
                     $notifyUsers,
                     $mailSubject,
-                    $mailBody
+                    $mailBody,
+                    $mailFormat
                 )
             ) {
                 $importCount++;
@@ -483,6 +486,7 @@ class ImportHandler
      * @param bool $notifyUsers Notify imported users via email?
      * @param string $mailSubject The subject of the notification mail
      * @param string $mailBody The body of the notification mail
+     * @param bool $mailFormat The format of the mail body (true = HTML, false = Plain text)
      * @return boolean
      */
     private function saveUser(
@@ -494,7 +498,8 @@ class ImportHandler
         $setImportmarker,
         $notifyUsers,
         $mailSubject,
-        $mailBody
+        $mailBody,
+        $mailFormat
     ) {
         // (array key 0 = row number 1)
         $rowNumber = $rowNumber + 1;
@@ -805,7 +810,8 @@ class ImportHandler
                     $userProfile,
                     $password,
                     $mailSubject,
-                    $mailBody
+                    $mailBody,
+                    $mailFormat
                 );
                 if ($notificationStatus['sent'] == true) {
                     $this->modx->log(modX::LOG_LEVEL_INFO, '&nbsp;&nbsp;&nbsp;Notification mail sent.');
@@ -1020,6 +1026,7 @@ class ImportHandler
      * @param string $password The users password (cleartext!)
      * @param string $mailSubject The subject of the notification mail
      * @param string $mailBody The body of the notification mail
+     * @param bool $mailFormat The format of the mail body (true = HTML, false = Plain text)
      * @return boolean
      */
     public function sendNotificationEmail(
@@ -1027,7 +1034,8 @@ class ImportHandler
         modUserProfile $profile,
         string $password,
         string $mailSubject,
-        string $mailBody
+        string $mailBody,
+        bool $mailFormat
     ) {
         // Set confirmation email properties
 
@@ -1056,9 +1064,13 @@ class ImportHandler
         $emailProperties['mailbody'] = $output;
         $emailProperties['mailsubject'] = $mailSubject;
 
-        $bodyText = Html2Text::convert($emailProperties['mailbody'], [
-            'ignore_errors' => true,
-        ]);
+        $bodyText = '';
+        // Convert plain text part if we have HTML mail
+        if ($mailFormat == true) {
+            $bodyText = Html2Text::convert($emailProperties['mailbody'], [
+                'ignore_errors' => true,
+            ]);
+        }
 
         // Send email!
         $mail = $this->modx->services->get('mail');
@@ -1070,7 +1082,7 @@ class ImportHandler
         $mail->set(modMail::MAIL_BODY_TEXT, $bodyText);
         $mail->address('to', $emailProperties['email'], $emailProperties['email']);
         $mail->address('reply-to', $this->modx->getOption('emailsender'));
-        $mail->setHTML(true);
+        $mail->setHTML($mailFormat);
 
         $sent = $mail->send();
         $sendStatus = [];

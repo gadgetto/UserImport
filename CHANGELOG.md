@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
+- Added new setting mail_format (HTML or Plain text)
 - User notification mails are now generated as multipart mails (HTML + plain-text)
 
 ### Changed

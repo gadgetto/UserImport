@@ -119,5 +119,14 @@ $settings['userimport.mailbody']->fromArray([
     'area'      => '',
 ], '', true, true);
 
+$settings['userimport.mail_format'] = $modx->newObject(modSystemSetting::class);
+$settings['userimport.mail_format']->fromArray([
+    'key'       => 'userimport.mail_format',
+    'value'     => '1',
+    'xtype'     => 'textfield',
+    'namespace' => 'userimport',
+    'area'      => '',
+], '', true, true);
+
 unset($mailbody);
 return $settings;

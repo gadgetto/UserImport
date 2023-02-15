@@ -34,6 +34,7 @@ class Get extends Processor
             'notifyusers',
             'mailsubject',
             'mailbody',
+            'mail_format',
         ];
 
         // Get cached versions of system settings (getOption not getObject::modSystemSetting)

@@ -177,6 +177,9 @@ class Import extends Processor
             sleep(1);
         }
 
+        // Get mailFormat setting
+        $mailFormat = $this->getProperty('mail_format') ? true : false;
+
         // Get selected MODX user group(s)
         $usergroups = $this->getProperty('usergroups');
         $groups = [];
@@ -249,7 +252,8 @@ class Import extends Processor
             $setImportmarker,
             $notifyUsers,
             $mailSubject,
-            $mailBody
+            $mailBody,
+            $mailFormat
         );
 
         $this->modx->log(
