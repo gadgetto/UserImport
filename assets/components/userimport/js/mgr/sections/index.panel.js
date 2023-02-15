@@ -71,6 +71,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
         }
         this.console = MODx.load({
             xtype: 'modx-console'
+            ,title: _('userimport.import_users_log_import_running')
             ,width: 680
             ,height: 460
             ,register: register
