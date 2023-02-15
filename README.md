@@ -1,7 +1,8 @@
 # UserImport
 
 ![Minimum MODX version](https://img.shields.io/badge/MODX_min-3.x-green)
-![Minimum PHP version](https://img.shields.io/badge/PHP-7.2.5-green)
+![Minimum PHP version](https://img.shields.io/badge/PHP_min-7.2.5-green)
+[![Crowdin](https://badges.crowdin.net/userimport-2/localized.svg)](https://crowdin.com/project/userimport-2)
 
 An extra to easily import users into the MODX user database and batch-assign MODX user groups and roles. The importer accepts data files in CSV format. Automatically validates your import-data to prevent inconsistent user objects.
 
