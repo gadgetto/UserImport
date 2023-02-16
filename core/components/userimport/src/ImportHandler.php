@@ -1060,6 +1060,9 @@ class ImportHandler
         // Parse mailbody and process MODX user/profile placeholders
         $chunk = $this->modx->newObject(modChunk::class);
         $chunk->setCacheable(false);
+
+        // Temporary increase log-level to prevent flooding of console window
+        $prevLogLevel = $this->modx->setLogLevel(modX::LOG_LEVEL_ERROR);
         $output = $chunk->process($emailProperties, $mailBody);
         $emailProperties['mailbody'] = $output;
         $emailProperties['mailsubject'] = $mailSubject;
@@ -1071,6 +1074,8 @@ class ImportHandler
                 'ignore_errors' => true,
             ]);
         }
+        // Re-enable previous log-level
+        $this->modx->setLogLevel($prevLogLevel);
 
         // Send email!
         $mail = $this->modx->services->get('mail');
