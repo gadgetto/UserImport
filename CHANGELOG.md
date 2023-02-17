@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Fully refactored for MODX3 (UserImport 2.x only!)
+- Moved translations to Crowdin
 
 ### Fixed
 - [#11] Fixes missing mailsubject and mailbody when import process starts
