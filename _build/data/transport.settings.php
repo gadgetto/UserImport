@@ -89,7 +89,7 @@ $mailbody = <<<EOT
         <p>
             Hello,<br>
             <br>
-            we\'d like to inform you, that your user credentials were imported 
+            we'd like to inform you, that your user credentials were imported 
             into our system and a new user account was created for you!
         </p>
         <p>
@@ -101,7 +101,7 @@ $mailbody = <<<EOT
             Your password: [[+password]]
         </p>
         <p>
-            If you have any questions please don\'t hesitate to contact us!
+            If you have any questions please don't hesitate to contact us!
         </p>
         <p>
             Your [[++site_name]] team
