@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This config.core.sample.php includes the original config.core.php file
  * from your MODX installation based on this folder structure:
