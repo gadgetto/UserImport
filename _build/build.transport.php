@@ -63,7 +63,6 @@ unset($root);
 
 require_once $sources['root'] . 'config.core.php';
 require_once MODX_CORE_PATH . 'vendor/autoload.php';
-require_once $sources['includes'] . 'functions.php';
 
 /* Load MODX */
 $modx = new modX();
