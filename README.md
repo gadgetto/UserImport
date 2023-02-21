@@ -2,7 +2,7 @@
 
 ![Minimum MODX version](https://img.shields.io/badge/MODX_min-2.3.x-green)
 ![Maximum MODX version](https://img.shields.io/badge/MODX_max-2.8.x-green)
-![Minimum PHP version](https://img.shields.io/badge/PHP-7.0-green)
+![Minimum PHP version](https://img.shields.io/badge/PHP_min-7.0-green)
 
 An extra to easily import users into the MODX user database and batch-assign MODX user groups and roles. The importer accepts data files in CSV format. Automatically validates your import-data to prevent inconsistent user objects.
 
