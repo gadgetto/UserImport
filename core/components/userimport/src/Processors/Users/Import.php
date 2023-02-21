@@ -45,7 +45,6 @@ class Import extends Processor
      */
     public function initialize()
     {
-        set_time_limit(0);
         $this->importhandler = new ImportHandler($this->modx);
         return parent::initialize();
     }
@@ -66,6 +65,20 @@ class Import extends Processor
             $this->modx->log(modX::LOG_LEVEL_FATAL, $this->modx->lexicon('userimport.import_users_log_no_class'));
             $error = true;
         }
+
+        $timeLimit = $this->importhandler->removeTimeLimit();
+        if ($timeLimit > 0) {
+            $this->modx->log(
+                modX::LOG_LEVEL_WARN,
+                $this->modx->lexicon('userimport.import_users_log_time_limit') . ' ' . $timeLimit
+            );
+        } else {
+            $this->modx->log(
+                modX::LOG_LEVEL_INFO,
+                $this->modx->lexicon('userimport.import_users_log_no_time_limit')
+            );
+        }
+        sleep(1);
 
         // Make sure a supported file was specified and the temporary upload succeeded:
         // $file is an array:

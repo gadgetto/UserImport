@@ -69,6 +69,8 @@ $_lang['userimport.import_users_row']                           = 'Row: ';
 
 $_lang['userimport.import_users_log_import_running']            = 'Import running...';
 $_lang['userimport.import_users_log_prep_csv_import']           = 'Preparing CSV import...';
+$_lang['userimport.import_users_log_time_limit']                = 'Attempt to remove execution time limit failed! Max execution time:';
+$_lang['userimport.import_users_log_no_time_limit']             = 'Removed execution time limit';
 $_lang['userimport.import_users_log_importing_csv']             = 'Importing CSV file';
 $_lang['userimport.import_users_log_extended_detected']         = 'Extended fields detected: ';
 $_lang['userimport.import_users_log_batchsize']                 = 'Batch size: ';
