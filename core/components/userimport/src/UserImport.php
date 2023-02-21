@@ -24,7 +24,7 @@ class UserImport
 {
     public const NAME     = 'UserImport';
     public const VERSION  = '2.0.0';
-    public const RELEASE  = 'alpha1';
+    public const RELEASE  = 'beta1';
 
     public const HELP_URL = 'https://docs.bitego.com/user-import/user-guide/';
     public const DEV_NAME = 'bitego (Martin Gartner, Franz Gallei)';
