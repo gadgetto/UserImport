@@ -1061,8 +1061,6 @@ class ImportHandler
         $chunk = $this->modx->newObject(modChunk::class);
         $chunk->setCacheable(false);
 
-        // Temporary increase log-level to prevent flooding of console window
-        $prevLogLevel = $this->modx->setLogLevel(modX::LOG_LEVEL_ERROR);
         $output = $chunk->process($emailProperties, $mailBody);
         $emailProperties['mailbody'] = $output;
         $emailProperties['mailsubject'] = $mailSubject;
@@ -1074,8 +1072,6 @@ class ImportHandler
                 'ignore_errors' => true,
             ]);
         }
-        // Re-enable previous log-level
-        $this->modx->setLogLevel($prevLogLevel);
 
         // Send email!
         $mail = $this->modx->services->get('mail');
@@ -1137,5 +1133,17 @@ class ImportHandler
             }
         }
         return $result;
+    }
+
+    /**
+     * Try to remove PHP time limit.
+     *
+     * @access public
+     * @return integer The time limit (seconds)
+     */
+    public function removeTimeLimit()
+    {
+        $removed = set_time_limit(0);
+        return $removed ? 0 : (int) ini_get('max_execution_time');
     }
 }
