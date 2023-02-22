@@ -1,21 +1,13 @@
 <?php
+
 /**
- * UserImport
+ * This file is part of the UserImport package.
  *
- * Copyright 2014 by bitego <office@bitego.com>
+ * @copyright bitego (Martin Gartner)
+ * @license GNU General Public License v2.0 (and later)
  *
- * UserImport is free software; you can redistribute it and/or modify it under the
- * terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
- * version.
- *
- * UserImport is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
- * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this software; if not, write to the Free Software Foundation, Inc., 59 Temple
- * Place, Suite 330, Boston, MA 02111-1307 USA
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 /**
@@ -28,29 +20,32 @@
  * @subpackage processors
  */
 
-class UserGroupsGetNodesProcessor extends modProcessor {
+class UserGroupsGetNodesProcessor extends modProcessor
+{
     /** @var string $id */
     public $id;
-    
+
     /** @var modUserGroup $userGroup */
     public $userGroup;
-    
+
     /**
      * {@inheritDoc}
      *
      * @return boolean
      */
-    public function checkPermissions() {
+    public function checkPermissions()
+    {
         return $this->modx->hasPermission('usergroup_view');
     }
-    
+
     /**
      * {@inheritDoc}
      *
      * @return array
      */
-    public function getLanguageTopics() {
-        return array('user');
+    public function getLanguageTopics()
+    {
+        return ['user'];
     }
 
     /**
@@ -58,22 +53,24 @@ class UserGroupsGetNodesProcessor extends modProcessor {
      *
      * @return mixed
      */
-    public function initialize() {
-        $this->setDefaultProperties(array(
+    public function initialize()
+    {
+        $this->setDefaultProperties([
             'id' => 0,
             'sort' => 'name',
             'dir' => 'ASC',
             'showAnonymous' => false,
-        ));
+        ]);
         return true;
     }
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @return mixed
      */
-    public function process() {
+    public function process()
+    {
         $this->id = $this->parseId($this->getProperty('id'));
         $this->getUserGroup();
 
@@ -81,7 +78,7 @@ class UserGroupsGetNodesProcessor extends modProcessor {
 
         $list = array();
         $list = $this->addAnonymous($list);
-        
+
         /** @var modUserGroup $group */
         foreach ($groups['results'] as $group) {
             $groupArray = $this->prepareGroup($group);
@@ -99,8 +96,9 @@ class UserGroupsGetNodesProcessor extends modProcessor {
      * @param string $id
      * @return mixed
      */
-    protected function parseId($id) {
-        return str_replace('n_ug_','',$id);
+    protected function parseId($id)
+    {
+        return str_replace('n_ug_', '', $id);
     }
 
     /**
@@ -108,7 +106,8 @@ class UserGroupsGetNodesProcessor extends modProcessor {
      *
      * @return modUserGroup|null
      */
-    public function getUserGroup() {
+    public function getUserGroup()
+    {
         if (!empty($this->id)) {
             $this->userGroup = $this->modx->getObject('modUserGroup', $this->id);
         }
@@ -120,29 +119,31 @@ class UserGroupsGetNodesProcessor extends modProcessor {
      *
      * @return array
      */
-    public function getGroups() {
-        $data = array();
+    public function getGroups()
+    {
+        $data = [];
         $c = $this->modx->newQuery('modUserGroup');
         $c->where(array(
             'parent' => $this->id,
         ));
-        $data['total'] = $this->modx->getCount('modUserGroup',$c);
-        $c->sortby($this->getProperty('sort'),$this->getProperty('dir'));
-        $data['results'] = $this->modx->getCollection('modUserGroup',$c);
+        $data['total'] = $this->modx->getCount('modUserGroup', $c);
+        $c->sortby($this->getProperty('sort'), $this->getProperty('dir'));
+        $data['results'] = $this->modx->getCollection('modUserGroup', $c);
         return $data;
     }
 
     /**
      * Add the Anonymous group to the list
-     * 
+     *
      * @param array $list
      * @return array
      */
-    public function addAnonymous(array $list) {
+    public function addAnonymous(array $list)
+    {
         if ($this->getProperty('showAnonymous') && empty($this->id)) {
             $cls = 'pupdate';
             $list[] = array(
-                'text' => '('.$this->modx->lexicon('anonymous').')',
+                'text' => '(' . $this->modx->lexicon('anonymous') . ')',
                 'id' => 'n_ug_0',
                 'leaf' => true,
                 'type' => 'usergroup',
@@ -156,18 +157,19 @@ class UserGroupsGetNodesProcessor extends modProcessor {
 
     /**
      * Prepare a User Group for listing
-     * 
+     *
      * @param modUserGroup $group
      * @return array
      */
-    public function prepareGroup(modUserGroup $group) {
+    public function prepareGroup(modUserGroup $group)
+    {
         $cls = 'padduser pcreate pupdate';
         if ($group->get('id') != 1) {
             $cls .= ' premove';
         }
         return array(
-            'text' => $group->get('name').' ('.$group->get('id').')',
-            'id' => 'n_ug_'.$group->get('id'),
+            'text' => $group->get('name') . ' (' . $group->get('id') . ')',
+            'id' => 'n_ug_' . $group->get('id'),
             'leaf' => false,
             'type' => 'usergroup',
             'qtip' => $group->get('description'),

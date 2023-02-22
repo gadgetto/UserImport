@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added bootstrapper to setup development environment
 
 ## Changed
+- Complete code refactoring PSR12 based
 - Updated package build process
 
 ## Fixed
 - [#11] Fixed missing mailsubject and mailbody when import process starts
+- Removed deprecated use of strftime (PHP8+)
+- Fixed birth date check
 
 ## [1.1.1-pl] - 2020-05-19
 ### Added
