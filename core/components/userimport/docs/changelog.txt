@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Changed
 - Updated package build process
 
+## Fixed
+- [#11] Fixed missing mailsubject and mailbody when import process starts
+
 ## [1.1.1-pl] - 2020-05-19
 ### Added
 - Added new checks for import file
