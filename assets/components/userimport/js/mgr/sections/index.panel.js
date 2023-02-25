@@ -131,7 +131,7 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,scope: this
         });
         buttons.push({
-            text: '<i class="icon icon-check-circle icon-lg"></i>&nbsp;' + _('userimport.settings_save_button')
+            text: '<i class="icon icon-check-circle"></i>&nbsp;' + _('userimport.settings_save_button')
             ,id: 'button-settings-save'
             ,handler: this.updateSettings
             ,scope: this
