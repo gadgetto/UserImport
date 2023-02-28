@@ -63,7 +63,7 @@ class Base extends modExtraManagerController
      */
     public function getLanguageTopics()
     {
-        return ['user,userimport:default'];
+        return ['user', 'userimport:default'];
     }
 
     /**
