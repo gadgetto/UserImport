@@ -10,6 +10,7 @@ An extra to easily import users into the MODX user database and batch-assign MOD
 
 - MODX 3.0.0 or later
 - PHP 7.2.5 or later
+- optionally GoodNews add-on (for importing GoodNews subscribers)
 
 ## Latest Changes
 
