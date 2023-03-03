@@ -12,6 +12,7 @@ var register = 'mgr';
 
 UserImport.IndexPanel = function(config) {
     config = config || {};
+
     Ext.applyIf(config,{
         id: 'userimport-panel-index'
         ,cls: 'container'
@@ -25,13 +26,7 @@ UserImport.IndexPanel = function(config) {
             ,itemId: 'tabs'
 			,cls: 'structure-tabs'
             ,deferredRender: false
-            ,items: [{
-                xtype: 'userimport-panel-import'
-            },{
-                xtype: 'userimport-panel-notification-template'
-            },{
-                xtype: 'userimport-panel-about'
-            }]
+            ,items: this.getPanels()
         }]
         ,listeners: {
             'tabchange': {fn: function(panel) {
@@ -103,6 +98,24 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
           usergroups: nodeIDs
         });
         
+        // get selected GoodNews groups and categories from tree
+        if (UserImport.config.goodNewsAddOn) {
+            var gonNodeIDs = '';
+            var gonSelNodes;
+            var gonTree = Ext.getCmp('userimport-tree-gongroupscategories');
+            gonSelNodes = gonTree.getChecked();
+            Ext.each(gonSelNodes, function(gonNode){
+                if (gonNodeIDs!='') {
+                    gonNodeIDs += ',';
+                }
+                gonNodeIDs += gonNode.id;
+            });
+            // write selected nodes to hidden field
+            this.getForm().setValues({
+              gongroupscategories: gonNodeIDs
+            });
+        }
+
         this.getForm().submit({
             url: UserImport.config.connectorUrl
             ,params: {
@@ -146,6 +159,24 @@ Ext.extend(UserImport.IndexPanel,MODx.FormPanel,{
             ,scope: this
         });
         return buttons;
+    }
+    ,getPanels: function() {
+        var panels = [];
+        panels.push({
+            xtype: 'userimport-panel-import'
+        });
+        if (UserImport.config.goodNewsAddOn) {
+            panels.push({
+                xtype: 'userimport-panel-goodnews'
+            });
+        }
+        panels.push({
+            xtype: 'userimport-panel-notification-template'
+        });
+        panels.push({
+            xtype: 'userimport-panel-about'
+        });
+        return panels;
     }
     ,getSettings: function(){
         this.getForm().load({

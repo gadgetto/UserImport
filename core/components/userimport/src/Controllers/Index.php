@@ -35,6 +35,9 @@ class Index extends Base
     public function loadCustomCssJs()
     {
         $this->addJavascript($this->userimport->config['jsUrl'] . 'mgr/widgets/import.panel.js');
+        if ($this->userimport->config['goodNewsAddOn']) {
+            $this->addJavascript($this->userimport->config['jsUrl'] . 'mgr/widgets/goodnews.panel.js');
+        }
         $this->addJavascript($this->userimport->config['jsUrl'] . 'mgr/widgets/notificationtemplate.panel.js');
         $this->addJavascript($this->userimport->config['jsUrl'] . 'mgr/widgets/about.panel.js');
         $this->addLastJavascript($this->userimport->config['jsUrl'] . 'mgr/sections/index.panel.js');

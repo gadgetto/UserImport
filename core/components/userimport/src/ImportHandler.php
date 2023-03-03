@@ -12,12 +12,16 @@
 
 namespace Bitego\UserImport;
 
+use Bitego\UserImport\UserImport;
 use MODX\Revolution\modX;
 use MODX\Revolution\modUser;
 use MODX\Revolution\modUserProfile;
 use MODX\Revolution\modChunk;
 use MODX\Revolution\Mail\modMail;
 use Soundasleep\Html2Text;
+use Bitego\GoodNews\Model\GoodNewsSubscriberMeta;
+use Bitego\GoodNews\Model\GoodNewsGroupMember;
+use Bitego\GoodNews\Model\GoodNewsCategoryMember;
 
 /**
  * ImportHandler class handles batch import of users into MODX users database
@@ -30,6 +34,9 @@ class ImportHandler
 {
     /** @var modX $modx A reference to the modX object */
     public $modx = null;
+
+    /** @var UserImport $userimport A reference to the UserImport object */
+    public $userimport = null;
 
     /** @var array $config An array of config values */
     public $config = [];
@@ -95,12 +102,14 @@ class ImportHandler
     public function __construct(modX &$modx, array $config = [])
     {
         $this->modx = &$modx;
-        $this->modx->lexicon->load('user', 'userimport:default');
+        $this->modx->lexicon->load('user', 'userimport:default', 'goodnews:default');
         $this->importKey = uniqid('uik', true);
         $this->config = array_merge([
             'use_multibyte' => (bool)$this->modx->getOption('use_multibyte', null, false),
             'encoding' => $this->modx->getOption('modx_charset', null, 'UTF-8'),
         ], $config);
+
+        $this->userimport = new UserImport($modx);
     }
 
     /**
@@ -306,6 +315,8 @@ class ImportHandler
      * @param int $batchSize (default: 0) If set to 0, get all the data at once
      * @param array $groups Array of MODX User Group ids
      * @param int $role A MODX User Role id
+     * @param array $gonGroups Array of GoodNews group ids
+     * @param array $gonCategories Array of GoodNews category ids
      * @param bool $autoUsername Automatically use email address as username?
      * @param bool $setImportmarker Write import-markers to extended fields?
      * @param bool $notifyUsers Notify imported users via email?
@@ -318,6 +329,8 @@ class ImportHandler
         int $batchSize = 0,
         array $groups = [],
         int $role = 0,
+        array $gonGroups = [],
+        array $gonCategories = [],
         bool $autoUsername = false,
         bool $setImportmarker = true,
         bool $notifyUsers = false,
@@ -346,6 +359,8 @@ class ImportHandler
                     $newUser,
                     $groups,
                     $role,
+                    $gonGroups,
+                    $gonCategories,
                     $autoUsername,
                     $setImportmarker,
                     $notifyUsers,
@@ -364,15 +379,12 @@ class ImportHandler
     /**
      * Get users data from CSV file.
      *
-     * @todo Currently we only support CSV files with predifined columns/fields!
-     *
      * @access private
      * @return mixed array $importUsers
      */
     private function getImportUsers()
     {
         $importUsers = [];
-
         if ($this->batchSize > 0) {
             $lineCount = 0;
         } else {
@@ -380,7 +392,13 @@ class ImportHandler
         }
         while ($lineCount < $this->batchSize) {
             // Get next row from CSV file
-            $row = fgetcsv($this->fileHandle, $this->lineLength, $this->delimiter, $this->enclosure, $this->escape);
+            $row = fgetcsv(
+                $this->fileHandle,
+                $this->lineLength,
+                $this->delimiter,
+                $this->enclosure,
+                $this->escape
+            );
             if (!$row) {
                 break;
             }
@@ -481,6 +499,8 @@ class ImportHandler
      *        ($fieldvalues[0] = email, $fieldvalues[1] = fullname)
      * @param array $groups The MODX User Group IDs for the new MODX user
      * @param int $role The MODX User Role ID for the new MODX user
+     * @param array $gonGroups Array of GoodNews group ids
+     * @param array $gonCategories Array of GoodNews category ids
      * @param bool $autoUsername Automatically use email address as username?
      * @param bool $setImportmarker Write import-markers to extended fields?
      * @param bool $notifyUsers Notify imported users via email?
@@ -494,6 +514,8 @@ class ImportHandler
         $fieldvalues,
         $groups,
         $role,
+        $gonGroups,
+        $gonCategories,
         $autoUsername,
         $setImportmarker,
         $notifyUsers,
@@ -768,14 +790,16 @@ class ImportHandler
             $fieldvalues['extended'] = $importInfo;
         }
 
+        // Add modUserProfile
         $userProfile->fromArray($fieldvalues);
         $user->addOne($userProfile);
-
         if ($user->save()) {
             $userSaved = true;
-            $userId = $user->get('id'); // preserve id of new user for later use
+        }
 
-            // Add user to MODX user group and assign role
+        // Add user to MODX user group(s) and assign role
+        if ($userSaved) {
+            $userId = $user->get('id'); // preserve id of new user for later use
             if (isset($groups) && is_array($groups) && !empty($groups)) {
                 foreach ($groups as $group) {
                     if (!$user->joinGroup(intval($group), intval($role))) {
@@ -786,9 +810,55 @@ class ImportHandler
             }
         }
 
+        if ($userSaved && $this->userimport->goodNewsAddOn && !empty($gonGroups)) {
+            // Create GoodNewsSubscriberMeta
+            $subscriberMeta = $this->modx->newObject(GoodNewsSubscriberMeta::class);
+            $subscriberMeta->set('subscriber_id', $userId);
+            $subscriberMeta->set('sid', md5(uniqid(rand() . $userId, true)));
+            $subscriberMeta->set('subscribedon', time());
+            $subscriberMeta->set('ip', 'imported'); // Set IP field to string 'imported' for later reference
+            if (!$subscriberMeta->save()) {
+                $userSaved = false;
+            }
+        }
+
+        if ($userSaved && $this->userimport->goodNewsAddOn && !empty($gonGroups)) {
+            // Create GoodNewsGroupMember entries
+            foreach ($gonGroups as $gonGroupId) {
+                $groupmember = $this->modx->newObject(GoodNewsGroupMember::class);
+                $groupmember->set('goodnewsgroup_id', $gonGroupId);
+                $groupmember->set('member_id', $userId);
+                if (!$groupmember->save()) {
+                    $userSaved = false;
+                    break;
+                }
+            }
+        }
+
+        if ($userSaved && $this->userimport->goodNewsAddOn && !empty($gonCategories)) {
+            // Create GoodNewsCategoryMember entries
+            foreach ($gonCategories as $gonCategoryId) {
+                $categorymember = $this->modx->newObject(GoodNewsCategoryMember::class);
+                $categorymember->set('goodnewscategory_id', $gonCategoryId);
+                $categorymember->set('member_id', $userId);
+                if (!$categorymember->save()) {
+                    $userSaved = false;
+                    break;
+                }
+            }
+        }
+
         if (!$userSaved) {
-            // Rollback if one of the savings failed!
+            // Perform rollback if one of the savings failed!
             $user->remove();
+            if ($this->userimport->goodNewsAddOn) {
+                $subscriberMeta = $this->modx->getObject(GoodNewsSubscriberMeta::class, ['subscriber_id' => $userId]);
+                if ($subscriberMeta) {
+                    $subscriberMeta->remove();
+                }
+                $this->modx->removeCollection(GoodNewsGroupMember::class, ['member_id' => $userId]);
+                $this->modx->removeCollection(GoodNewsCategoryMember::class, ['member_id' => $userId]);
+            }
             $this->modx->log(
                 modX::LOG_LEVEL_WARN,
                 '-> ' . $this->modx->lexicon('userimport.import_users_row') . $rowNumber . ' ' .

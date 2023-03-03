@@ -217,6 +217,30 @@ class Import extends Processor
         // Get MODX user role
         $role = $this->getProperty('role', 0);
 
+        // Get GoodNews groups / categories if available/activated
+        $gonGroupsCategories = $this->getProperty('gongroupscategories');
+        $gonGroups = [];
+        $gonCategories = [];
+        if (!empty($gonGroupsCategories)) {
+            // extract group and category IDs
+            // (e.g. n_gongrp_5,n_goncat_6_5,n_goncat_5_5,n_gongrp_6,n_gongrp_7 )
+            // $nodeparts[0] = 'n'
+            // $nodeparts[1] = 'gongrp' || 'goncat'
+            // $nodeparts[2] = grpID || catID
+            // $nodeparts[3] = parent grpID (or empty)
+
+            $nodes = explode(',', $gonGroupsCategories);
+
+            foreach ($nodes as $node) {
+                $nodeparts = explode('_', $node);
+                if ($nodeparts[1] == 'gongrp') {
+                    $gonGroups[] = $nodeparts[2];
+                } elseif ($nodeparts[1] == 'goncat') {
+                    $gonCategories[] = $nodeparts[2];
+                }
+            }
+        }
+
         // Only continue with processing if no errors occurred
         if ($error || $this->hasErrors()) {
             $this->modx->log(modX::LOG_LEVEL_ERROR, $this->modx->lexicon('userimport.import_users_log_failed'));
@@ -261,6 +285,8 @@ class Import extends Processor
             $batchsize,
             $groups,
             $role,
+            $gonGroups,
+            $gonCategories,
             $autoUsername,
             $setImportmarker,
             $notifyUsers,

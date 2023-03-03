@@ -13,6 +13,8 @@
 namespace Bitego\UserImport;
 
 use MODX\Revolution\modX;
+use MODX\Revolution\Transport\modTransportPackage;
+use MODX\Revolution\modNamespace;
 
 /**
  * UserImport main class
@@ -39,6 +41,15 @@ class UserImport
 
     /** @var array $config UserImport config array */
     public $config = [];
+
+    /** @var boolean $goodNewsAddOn Is the GoodNews add-on available? (required for providing GoodNews groups/categories assignment) */
+    public $goodNewsAddOn = false;
+
+    /** @var string $goodNewsCorePath The core path of GoodNews add-on */
+    public $goodNewsCorePath = '';
+
+    /** @var string $goodNewsAssetsPath The assets path of GoodNews add-on */
+    public $goodNewsAssetsPath = '';
 
     /** @var boolean $debug Debug mode on/off */
     public $debug = false;
@@ -90,7 +101,104 @@ class UserImport
             'componentRelease' => self::RELEASE,
             'developerName'    => self::DEV_NAME,
             'developerUrl'     => self::DEV_URL,
-            'debug'            => $this->debug,
         ], $config);
+
+        // This part is only used in 'mgr' context
+        if ($this->modx->context->key == 'mgr') {
+            $this->goodNewsAddOn = $this->isTransportPackageInstalled('goodnews');
+            $this->goodNewsCorePath = $this->getComponentCorePath('goodnews');
+            $this->goodNewsAssetsPath = $this->getComponentAssetsPath('goodnews');
+
+            $this->config = array_merge([
+                'goodNewsAddOn'      => $this->goodNewsAddOn,
+                'goodNewsCorePath'   => $this->goodNewsCorePath,
+                'goodNewsAssetsPath' => $this->goodNewsAssetsPath,
+                'debug'              => $this->debug,
+            ], $this->config);
+        }
+    }
+
+    /**
+     * Checks if a MODX transport package is installed.
+     *
+     * @access public
+     * @param string $tpname Name of transport package
+     * @return boolean
+     */
+    public function isTransportPackageInstalled(string $tpname)
+    {
+        $installed = false;
+        $package = $this->modx->getObject(modTransportPackage::class, [
+            'package_name' => $tpname,
+        ]);
+        if (is_object($package)) {
+            $installed = true;
+        } else {
+            // Optionally check if development environment for package is available
+            $installed = $this->existsNamespace(strtolower($tpname));
+        }
+        return $installed;
+    }
+
+    /**
+     * Checks if a MODX namespace exists.
+     *
+     * @access public
+     * @param string $nspace Name of namespace
+     * @return boolean
+     */
+    public function existsNamespace(string $nspace)
+    {
+        $exists = false;
+        /** @var modNamespace $namespace */
+        $namespace = $this->modx->getObject(modNamespace::class, [
+            'name' => $nspace,
+        ]);
+        if (is_object($namespace)) {
+            $exists = true;
+        }
+        return $exists;
+    }
+
+    /**
+     * Get a component core path from it's namespace entry.
+     *
+     * @access public
+     * @param string $nspace Name of namespace
+     * @return string The translated core path
+     */
+    public function getComponentCorePath(string $nspace)
+    {
+        $corePath = '';
+        /** @var modNamespace $namespace */
+        $namespace = $this->modx->getObject(modNamespace::class, [
+            'name' => $nspace,
+        ]);
+        if (is_object($namespace)) {
+            // Get translated core path
+            $corePath = $namespace->getCorePath();
+        }
+        return $corePath;
+    }
+
+    /**
+     * Get a component assets path from it's namespace entry.
+     *
+     * @access public
+     * @param string $nspace Name of namespace
+     * @return string The translated assets path
+     */
+    public function getComponentAssetsPath(string $nspace)
+    {
+        $assetsPath = '';
+        /** @var modNamespace $namespace */
+        $namespace = $this->modx->getObject(modNamespace::class, [
+            'name' => $nspace,
+        ]);
+        if (is_object($namespace)) {
+            // Get translated assets path
+            $assetsPath = $namespace->getAssetsPath();
+        }
+        return $assetsPath;
     }
 }
