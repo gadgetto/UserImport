@@ -57,6 +57,11 @@ $_lang['userimport.import_users_set_importmarker_desc']         = 'Wenn aktivier
 $_lang['userimport.import_users_notify_users']                  = 'Benutzer benachrichtigen';
 $_lang['userimport.import_users_notify_users_desc']             = 'Wenn aktiviert, erhalten alle neu importierten Benutzer eine Email-Benachrichtigung.';
 
+$_lang['userimport.import_goodnews_tab']                        = 'GoodNews';
+$_lang['userimport.import_goodnews_tab_desc']                   = 'Da das GoodNews MODX Add-on installiert ist, können Sie auch GoodNews-Mailinggruppen und -Kategorien auswählen, die beim Import von Benutzern zugewiesen werden sollen. Wenn Gruppen und/oder Kategorien ausgewählt sind, wird auch für jeden Benutzer ein GoodNews Meta-Profil erzeugt.';
+$_lang['userimport.import_goodnews_grpcat']                     = 'Mailing Gruppen und Kategorien';
+$_lang['userimport.import_goodnews_assign_grpcat']              = 'Mailing Gruppen und Kategorien zuweisen';
+
 $_lang['userimport.import_users_button_start']                  = 'Import starten';
 $_lang['userimport.import_users_status']                        = 'Import Status';
 $_lang['userimport.import_users_msgbox_start_now']              = 'Import jetzt starten?';
